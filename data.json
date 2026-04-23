@@ -1,0 +1,30 @@
+{
+  "last_updated": "2026-04-23",
+
+  "partidos": [
+    { "id": "P1", "fecha": "2026-01-18", "rival": "Tigres" },
+    { "id": "P2", "fecha": "2026-02-14", "rival": "América" },
+    { "id": "P3", "fecha": "2026-03-22", "rival": "Monterrey" }
+  ],
+
+  "abonados": [
+    { "id": "A001", "tipo": "anual",      "vigencia_inicio": "2026-01-01", "vigencia_fin": "2026-12-31" },
+    { "id": "A002", "tipo": "anual",      "vigencia_inicio": "2026-01-01", "vigencia_fin": "2026-12-31" },
+    { "id": "A003", "tipo": "semestral",  "vigencia_inicio": "2026-01-01", "vigencia_fin": "2026-06-30" },
+    { "id": "A004", "tipo": "semestral",  "vigencia_inicio": "2026-07-01", "vigencia_fin": "2026-12-31" },
+    { "id": "A005", "tipo": "anual",      "vigencia_inicio": "2026-01-01", "vigencia_fin": "2026-12-31" }
+  ],
+
+  "accesos": [
+    { "partido_id": "P1", "abonado_id": "A001" },
+    { "partido_id": "P1", "abonado_id": "A003" },
+    { "partido_id": "P1", "abonado_id": "A005" },
+
+    { "partido_id": "P2", "abonado_id": "A001" },
+    { "partido_id": "P2", "abonado_id": "A002" },
+
+    { "partido_id": "P3", "abonado_id": "A002" },
+    { "partido_id": "P3", "abonado_id": "A003" },
+    { "partido_id": "P3", "abonado_id": "A005" }
+  ]
+}
