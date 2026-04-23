@@ -16,16 +16,20 @@
      Cambia el color de acento aquí si quieres otra paleta.
      ============================================================ */
   :root {
-    --bg: #f5f6f8;
-    --surface: #ffffff;
-    --border: #e3e5ea;
-    --text: #1f2430;
-    --text-muted: #6b7280;
-    --accent: #2563eb;      /* azul sobrio */
-    --accent-soft: #dbe7ff;
-    --danger: #dc2626;
-    --success: #16a34a;
-    --shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.04);
+    --bg: #0a0b0f;
+    --surface: #12141a;
+    --surface-2: #1b1e27;
+    --sidebar: #0d0f14;
+    --border: #232630;
+    --text: #e7ebf3;
+    --text-muted: #8a92a5;
+    --accent: #ef4444;             /* acento rojo */
+    --accent-soft: #7f1d1d55;
+    --accent-solid: #dc2626;
+    --danger: #ef4444;
+    --success: #34d399;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 12px rgba(0,0,0,.3);
+    --sidebar-w: 240px;
   }
 
   * { box-sizing: border-box; }
@@ -39,32 +43,78 @@
   }
 
   /* ============================================================
-     HEADER
+     LAYOUT GLOBAL: sidebar + contenido
      ============================================================ */
-  header.topbar {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 20px 24px;
-  }
-  header.topbar h1 {
-    margin: 0;
-    font-size: 20px;
-    font-weight: 600;
-    letter-spacing: -.01em;
-  }
-  header.topbar .subtitle {
-    color: var(--text-muted);
-    font-size: 13px;
-    margin-top: 4px;
+  .app {
+    display: grid;
+    grid-template-columns: var(--sidebar-w) 1fr;
+    min-height: 100vh;
   }
 
-  /* ============================================================
-     LAYOUT / CONTENEDOR PRINCIPAL
-     ============================================================ */
-  main {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 24px;
+  /* ---- SIDEBAR ---- */
+  aside.sidebar {
+    background: var(--sidebar);
+    border-right: 1px solid var(--border);
+    padding: 20px 16px;
+    display: flex; flex-direction: column; gap: 24px;
+    position: sticky; top: 0; align-self: start;
+    height: 100vh; overflow-y: auto;
+  }
+  aside.sidebar .brand {
+    display: flex; align-items: center; gap: 10px;
+    padding: 4px 8px;
+  }
+  aside.sidebar .brand .logo {
+    width: 34px; height: 34px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent-solid), var(--accent));
+    display: grid; place-items: center; color: #fff; font-weight: 700;
+  }
+  aside.sidebar .brand .title { font-weight: 700; font-size: 15px; }
+  aside.sidebar .brand .sub { color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+
+  aside.sidebar nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+  aside.sidebar .nav-group { margin-top: 14px; }
+  aside.sidebar .nav-group-label {
+    font-size: 11px; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: .08em;
+    padding: 4px 10px 6px;
+  }
+  aside.sidebar a.nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 8px;
+    color: var(--text-muted); text-decoration: none; font-size: 14px;
+    cursor: pointer;
+  }
+  aside.sidebar a.nav-item:hover { background: rgba(255,255,255,.03); color: var(--text); }
+  aside.sidebar a.nav-item.active {
+    background: var(--accent-soft); color: var(--accent);
+    box-shadow: inset 2px 0 0 var(--accent);
+  }
+  aside.sidebar a.nav-item .ico { width: 16px; display:inline-block; text-align:center; }
+
+  /* ---- CONTENT ---- */
+  main.content {
+    padding: 24px 32px 48px;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  main.content .page-header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap; margin-bottom: 20px;
+  }
+  main.content .page-header h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -.01em; }
+  main.content .page-header .subtitle { color: var(--text-muted); font-size: 13px; margin-top: 4px; }
+
+  /* Una page a la vez */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  @media (max-width: 820px) {
+    .app { grid-template-columns: 1fr; }
+    aside.sidebar { height: auto; position: static; border-right: 0; border-bottom: 1px solid var(--border); }
+    aside.sidebar nav { flex-direction: row; flex-wrap: wrap; gap: 6px; }
+    aside.sidebar .nav-group { margin: 0; width: 100%; }
+    main.content { padding: 20px 16px; }
   }
   section { margin-bottom: 32px; }
   h2 {
@@ -73,6 +123,120 @@
     margin: 0 0 12px;
     color: var(--text);
   }
+
+  /* "Ticket Inventory Resolution": barra horizontal con sold + expired + total.
+     Colores: rojo para vendidos, rojo tenue para expirados.
+     Si el segmento es muy angosto, el número se muestra al costado derecho del
+     bar (nunca se corta). */
+  .inv-list { padding: 4px 0; }
+  .inv-row {
+    display: grid;
+    grid-template-columns: 160px 1fr 80px;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 18px;
+  }
+  .inv-row + .inv-row { border-top: 1px solid var(--border); }
+  .inv-row .name { font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .inv-row .total { text-align: right; font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 700; }
+
+  .inv-bar-wrap { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .inv-bar {
+    height: 22px; display: flex; border-radius: 6px; overflow: hidden;
+    background: rgba(255,255,255,.04); flex: 1; min-width: 0;
+  }
+  .inv-bar .seg {
+    display: flex; align-items: center; padding: 0 8px; height: 100%;
+    font-size: 11px; font-weight: 700; color: #fff;
+    white-space: nowrap; overflow: hidden;
+    font-variant-numeric: tabular-nums;
+  }
+  .inv-bar .seg.sold { background: #ef4444; }
+  .inv-bar .seg.exp  { background: #7f1d1d; color: #fecaca; }
+  .inv-bar .seg.empty-lbl { color: transparent; }  /* segmento renderiza solo la barra */
+
+  /* Etiquetas externas (cuando el segmento es muy angosto) */
+  .inv-ext { display: flex; gap: 8px; font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .inv-ext .x-sold { color: #ef4444; font-weight: 700; }
+  .inv-ext .x-exp  { color: #fca5a5; font-weight: 700; }
+
+  .inv-legend { display: flex; gap: 14px; font-size: 12px; color: var(--text-muted); }
+  .inv-legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: middle; }
+  .inv-legend .dot.sold { background: #ef4444; }
+  .inv-legend .dot.exp  { background: #7f1d1d; }
+
+  /* Panel "ranking con barras horizontales" (estilo dashboard) */
+  .rank-panel { padding: 18px 20px; }
+  .rank-panel h3 {
+    margin: 0 0 14px; font-size: 14px; font-weight: 600; color: var(--text);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .rank-panel h3 .hint { color: var(--text-muted); font-size: 12px; font-weight: 400; }
+  .rank-row { display: grid; grid-template-columns: 1fr 56px; align-items: center; gap: 12px; padding: 9px 0; }
+  .rank-row + .rank-row { border-top: 1px solid var(--border); }
+  .rank-row .name { font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rank-row .bar {
+    height: 6px; border-radius: 999px; background: rgba(255,255,255,.05);
+    position: relative; margin-top: 4px; overflow: hidden;
+  }
+  .rank-row .bar > span {
+    position: absolute; inset: 0 auto 0 0; border-radius: 999px;
+    background: var(--accent); opacity: .85;
+  }
+  .rank-row.sold .bar > span { background: var(--success); }
+  .rank-row .count { text-align: right; font-size: 13px; font-variant-numeric: tabular-nums; color: var(--text); }
+  .two-cols {
+    display: grid; gap: 16px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  @media (max-width: 820px) { .two-cols { grid-template-columns: 1fr; } }
+
+  /* Filtro de pestañas tipo pill */
+  .pill-tabs {
+    display: inline-flex; gap: 4px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 4px;
+  }
+  .pill-tabs button {
+    background: transparent; border: 0; color: var(--text-muted);
+    padding: 6px 12px; border-radius: 7px;
+    font-family: inherit; font-size: 13px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .pill-tabs button:hover { color: var(--text); }
+  .pill-tabs button.active {
+    background: var(--accent-soft); color: var(--accent);
+  }
+  .pill-tabs button .count {
+    font-size: 11px; padding: 1px 6px; border-radius: 999px;
+    background: rgba(255,255,255,.06); color: var(--text-muted);
+  }
+  .pill-tabs button.active .count { background: rgba(167,139,250,.2); color: var(--accent); }
+
+  /* Secciones colapsables */
+  details.collapsible { border: 1px solid var(--border); border-radius: 10px; background: var(--surface); padding: 12px 14px; }
+  details.collapsible + details.collapsible,
+  details.collapsible details.collapsible { margin-top: 12px; }
+  details.collapsible > summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 2px 0;
+    gap: 10px;
+  }
+  details.collapsible > summary::-webkit-details-marker { display: none; }
+  details.collapsible > summary .chev {
+    display: inline-block;
+    border: 6px solid transparent;
+    border-top-color: var(--text-muted);
+    transform: translateY(2px);
+    transition: transform .15s;
+  }
+  details.collapsible[open] > summary .chev {
+    transform: rotate(180deg) translateY(-2px);
+  }
+  details.collapsible[open] > summary { margin-bottom: 4px; }
+  details.collapsible h2, details.collapsible h3 { margin: 0; }
 
   /* ============================================================
      KPIs (tarjetas de resumen)
@@ -122,12 +286,13 @@
     font-size: 14px;
     border: 1px solid var(--border);
     border-radius: 6px;
-    background: #fff;
+    background: var(--surface-2);
     font-family: inherit;
     color: var(--text);
+    color-scheme: dark;
   }
   .field select:focus, .field input:focus {
-    outline: 2px solid var(--accent-soft);
+    outline: 2px solid var(--accent);
     border-color: var(--accent);
   }
   button.reset {
@@ -140,7 +305,7 @@
     font-size: 13px;
     color: var(--text);
   }
-  button.reset:hover { background: var(--bg); }
+  button.reset:hover { background: var(--surface-2); }
 
   /* ============================================================
      TABLAS
@@ -165,15 +330,25 @@
     white-space: nowrap;
   }
   th {
-    background: #fafbfc;
+    background: var(--surface-2);
     font-weight: 600;
     font-size: 12px;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: .03em;
+    position: sticky; top: 0;
   }
-  tbody tr:hover { background: #fafbfc; }
+  th.sortable { cursor: pointer; user-select: none; }
+  th.sortable:hover { color: var(--text); }
+  th.sortable::after {
+    content: ""; display: inline-block; margin-left: 4px;
+    border: 4px solid transparent; opacity: .4;
+  }
+  th.sort-asc::after  { border-bottom-color: var(--text-muted); border-top: 0; opacity: 1; }
+  th.sort-desc::after { border-top-color: var(--text-muted); border-bottom: 0; opacity: 1; }
+  tbody tr:hover { background: var(--surface-2); }
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.muted { color: var(--text-muted); font-size: 12px; }
   .pct-bar {
     display: inline-block;
     width: 60px;
@@ -219,12 +394,12 @@
     padding: 2px 8px;
     border-radius: 999px;
     background: var(--accent-soft);
-    color: var(--accent);
+    color: #bfdbfe;
     text-transform: uppercase;
     letter-spacing: .04em;
     font-weight: 600;
   }
-  .tag.semestral { background: #fde8d3; color: #b45309; }
+  .tag.semestral { background: #7c2d12; color: #fed7aa; }
 
   /* ============================================================
      RESPONSIVE
@@ -240,95 +415,119 @@
 
 <body>
 
+<div class="app">
+
 <!-- ============================================================
-     ENCABEZADO: título + fecha de última actualización
+     SIDEBAR con navegación
      ============================================================ -->
-<header class="topbar">
-  <h1>Reporte de asistencia de abonados</h1>
-  <div class="subtitle">
-    Última actualización: <span id="last-updated">—</span>
+<aside class="sidebar">
+  <div class="brand">
+    <div class="logo">T</div>
+    <div>
+      <div class="title">Toluca FC</div>
+      <div class="sub">Abonados 2025-26</div>
+    </div>
   </div>
-</header>
 
-<main>
+  <nav>
+    <div class="nav-group">
+      <div class="nav-group-label">Asistencia</div>
+      <a class="nav-item active" data-page="resumen">
+        <span class="ico">▦</span> Resumen
+      </a>
+      <a class="nav-item" data-page="partidos">
+        <span class="ico">◉</span> Detalle por partido
+      </a>
+      <a class="nav-item" data-page="ranking">
+        <span class="ico">▤</span> Ranking de abonados
+      </a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Mercado secundario</div>
+      <a class="nav-item" data-page="ms-partidos">
+        <span class="ico">▥</span> Por partido
+      </a>
+      <a class="nav-item" data-page="ms-zonas">
+        <span class="ico">▨</span> Por zona
+      </a>
+      <a class="nav-item" data-page="ms-revendedores">
+        <span class="ico">⭳</span> Revendedores
+      </a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Eventos especiales</div>
+      <a class="nav-item" data-page="full">
+        <span class="ico">★</span> Digital FULL
+      </a>
+    </div>
+  </nav>
 
-  <!-- ============================================================
-       SECCIÓN 1: KPIs DE RESUMEN
-       ============================================================ -->
-  <section>
-    <h2>Resumen</h2>
-    <div class="kpi-grid" id="kpi-grid">
-      <div class="kpi"><div class="label">Abonados anuales</div><div class="value" id="kpi-anuales">—</div></div>
-      <div class="kpi"><div class="label">Abonados semestrales</div><div class="value" id="kpi-semestrales">—</div></div>
+  <div style="font-size:11px; color: var(--text-muted); padding: 8px;">
+    Actualizado: <span id="last-updated">—</span>
+  </div>
+</aside>
+
+<main class="content">
+
+  <!-- PÁGINA: RESUMEN -->
+  <section class="page active" id="page-resumen">
+    <div class="page-header">
+      <div>
+        <h1>Resumen</h1>
+        <div class="subtitle">Asistencia global de la temporada</div>
+      </div>
+      <div class="filters" style="margin:0">
+        <div class="field"><label for="f-desde">Desde</label><input type="date" id="f-desde" /></div>
+        <div class="field"><label for="f-hasta">Hasta</label><input type="date" id="f-hasta" /></div>
+        <button class="reset" id="f-reset">Limpiar</button>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi"><div class="label">Abonados</div><div class="value" id="kpi-anuales">—</div></div>
+      <div class="kpi"><div class="label">Partidos</div><div class="value" id="kpi-partidos">—</div></div>
       <div class="kpi"><div class="label">Asistencia prom. / partido</div><div class="value" id="kpi-asist-prom">—</div></div>
       <div class="kpi"><div class="label">Abonos no usados prom. / partido</div><div class="value" id="kpi-nousados-prom">—</div></div>
     </div>
-  </section>
 
-  <!-- ============================================================
-       SECCIÓN 2: FILTROS GLOBALES
-       Afectan KPIs, tabla por partido, gráfica y ranking.
-       ============================================================ -->
-  <section>
-    <div class="filters">
-      <div class="field">
-        <label for="f-tipo">Tipo de abono</label>
-        <select id="f-tipo">
-          <option value="ambos">Ambos</option>
-          <option value="anual">Anual</option>
-          <option value="semestral">Semestral</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="f-desde">Desde</label>
-        <input type="date" id="f-desde" />
-      </div>
-      <div class="field">
-        <label for="f-hasta">Hasta</label>
-        <input type="date" id="f-hasta" />
-      </div>
-      <button class="reset" id="f-reset">Limpiar filtros</button>
-    </div>
-  </section>
-
-  <!-- ============================================================
-       SECCIÓN 3: GRÁFICA DE BARRAS (abonos no usados por partido)
-       ============================================================ -->
-  <section>
-    <h2>Abonos no usados por partido</h2>
-    <div class="card chart-card">
-      <div class="chart-header">
-        <div style="font-size:13px;color:var(--text-muted)">Cada barra = un partido</div>
-        <div class="field" style="flex-direction:row;align-items:center;gap:6px">
-          <label for="chart-mode" style="font-size:12px">Serie:</label>
-          <select id="chart-mode">
-            <option value="total">Totales</option>
-            <option value="anual">Solo anuales</option>
-            <option value="semestral">Solo semestrales</option>
-          </select>
+    <div class="card chart-card" style="margin-top:20px">
+      <div class="chart-header" style="flex-direction:column; align-items:flex-start; gap:10px">
+        <div style="display:flex; align-items:center; justify-content:space-between; width:100%; flex-wrap:wrap; gap:10px">
+          <div>
+            <h2 style="margin:0">Abonos no usados por partido</h2>
+            <div style="font-size:12px; color: var(--text-muted); margin-top:4px; max-width:700px">
+              Cada abonado cuenta una vez por cada partido que faltó. Por eso la suma de las barras puede superar el total de abonos emitidos.
+            </div>
+          </div>
+          <div class="pill-tabs" id="chart-sort-tabs">
+            <button data-sort="cron" class="active">Cronológico</button>
+            <button data-sort="desc">Más no usados</button>
+            <button data-sort="asc">Menos no usados</button>
+          </div>
         </div>
       </div>
-      <div class="chart-box">
-        <canvas id="chart-nousados"></canvas>
-      </div>
+      <div class="chart-box" style="height:440px"><canvas id="chart-nousados"></canvas></div>
     </div>
   </section>
 
-  <!-- ============================================================
-       SECCIÓN 4: TABLA POR PARTIDO
-       ============================================================ -->
-  <section>
-    <h2>Detalle por partido</h2>
+  <!-- PÁGINA: DETALLE POR PARTIDO -->
+  <section class="page" id="page-partidos">
+    <div class="page-header">
+      <div>
+        <h1>Detalle por partido</h1>
+        <div class="subtitle">Elegibles, asistencia y abonos no usados por juego</div>
+      </div>
+    </div>
     <div class="card table-wrap">
       <table id="tabla-partidos">
         <thead>
           <tr>
-            <th>Fecha</th>
-            <th>Rival</th>
-            <th class="num">Elegibles</th>
-            <th class="num">Asistencias</th>
-            <th class="num">Ausencias</th>
-            <th class="num">% uso</th>
+            <th class="sortable" data-key="fecha">Fecha</th>
+            <th class="sortable" data-key="rival">Rival</th>
+            <th class="num sortable" data-key="elegibles">Elegibles</th>
+            <th class="num sortable" data-key="asistencias">Asistencias</th>
+            <th class="num sortable" data-key="ausencias">Ausencias</th>
+            <th class="num sortable" data-key="pctUso">% uso</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -339,20 +538,68 @@
     </div>
   </section>
 
-  <!-- ============================================================
-       SECCIÓN 5: RANKING DE ABONADOS CON MENOR % DE ASISTENCIA
-       ============================================================ -->
-  <section>
-    <h2>Top 50 abonados con menor % de asistencia</h2>
+  <!-- PÁGINA: RANKING DE ABONADOS -->
+  <section class="page" id="page-ranking">
+    <div class="page-header">
+      <div>
+        <h1>Ranking de abonados</h1>
+        <div class="subtitle">% de asistencia sobre partidos elegibles</div>
+      </div>
+    </div>
+
+    <!-- Histograma de frecuencia de asistencia -->
+    <div class="card" style="padding:18px 20px; margin-bottom:16px">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px">
+        <div>
+          <h3 style="margin:0; font-size:14px; font-weight:600">Frecuencia de asistencia</h3>
+          <div style="font-size:12px; color: var(--text-muted); margin-top:2px">Cuántos abonados asistieron a N partidos · <span style="color: var(--accent)">Haz click en una barra para filtrar la tabla</span></div>
+        </div>
+        <div style="display:flex; align-items:center; gap:14px">
+          <div class="inv-legend">
+            <span><span class="dot sold"></span>Con contacto</span>
+            <span><span class="dot exp"></span>Sin contacto</span>
+          </div>
+          <button class="reset" id="f-rank-bucket-clear" style="display:none">Limpiar selección</button>
+        </div>
+      </div>
+      <div class="chart-box" style="height:280px"><canvas id="chart-fidelidad"></canvas></div>
+    </div>
+
+    <div class="pill-tabs" id="rank-contact-tabs" style="margin-bottom:12px">
+      <button data-contact="todos"  class="active">Todos <span class="count" id="tab-count-todos">—</span></button>
+      <button data-contact="con">Con contacto (correo) <span class="count" id="tab-count-con">—</span></button>
+      <button data-contact="sin">Sin contacto (taquilla) <span class="count" id="tab-count-sin">—</span></button>
+    </div>
+
+    <div class="filters" style="margin-bottom:12px">
+      <div class="field">
+        <label for="f-rank-limit">Mostrar</label>
+        <select id="f-rank-limit">
+          <option value="50">Top 50</option>
+          <option value="100">Top 100</option>
+          <option value="250">Top 250</option>
+          <option value="500">Top 500</option>
+          <option value="0">Todos</option>
+        </select>
+      </div>
+      <div class="field" style="flex:1; min-width: 220px">
+        <label for="f-rank-search">Buscar (nombre, correo, ID)</label>
+        <input id="f-rank-search" type="search" placeholder="Ej. López, @gmail.com, 11984085…" />
+      </div>
+    </div>
     <div class="card table-wrap">
       <table id="tabla-ranking">
         <thead>
           <tr>
-            <th>ID abonado</th>
-            <th>Tipo</th>
-            <th class="num">Elegibles</th>
-            <th class="num">Asistidos</th>
-            <th class="num">% asistencia</th>
+            <th class="sortable" data-key="nombre">Nombre</th>
+            <th class="sortable" data-key="orden">Orden</th>
+            <th class="sortable" data-key="barcode">Código barras</th>
+            <th class="sortable" data-key="asiento">Asiento</th>
+            <th class="sortable" data-key="zona">Zona</th>
+            <th class="sortable" data-key="contacto">Contacto</th>
+            <th class="num sortable" data-key="elegibles">Elegibles</th>
+            <th class="num sortable" data-key="asistidos">Asistidos</th>
+            <th class="num sortable" data-key="pct">% asistencia</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -363,34 +610,288 @@
     </div>
   </section>
 
+  <!-- PÁGINA: MS POR PARTIDO -->
+  <section class="page" id="page-ms-partidos">
+    <div class="page-header">
+      <div>
+        <h1>Mercado secundario · Por partido</h1>
+        <div class="subtitle">Listings, vendidos y expirados por juego</div>
+      </div>
+      <div class="filters" style="margin:0">
+        <div class="field">
+          <label for="f-ms-estatus">Estatus</label>
+          <select id="f-ms-estatus">
+            <option value="">Todos</option>
+            <option value="vendido">Vendido</option>
+            <option value="expirado">Expirado</option>
+            <option value="disponible">Disponible</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpi-grid" style="margin-bottom:20px">
+      <div class="kpi"><div class="label">Total de listings</div><div class="value" id="kpi-ms-total">—</div></div>
+      <div class="kpi"><div class="label">Vendidos</div><div class="value" id="kpi-ms-vendidos">—</div></div>
+      <div class="kpi"><div class="label">Ingresos totales</div><div class="value" id="kpi-ms-ingresos">—</div></div>
+      <div class="kpi"><div class="label">Precio promedio</div><div class="value" id="kpi-ms-precio-prom">—</div></div>
+      <div class="kpi"><div class="label">Expirados</div><div class="value" id="kpi-ms-expirados">—</div></div>
+      <div class="kpi"><div class="label">Abonados que revenden</div><div class="value" id="kpi-ms-vendedores">—</div></div>
+    </div>
+
+    <div class="card" style="padding:18px 20px">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px">
+        <h3 style="margin:0; font-size:14px; font-weight:600">Resolución de inventario por partido</h3>
+        <div class="inv-legend">
+          <span><span class="dot sold"></span>Vendidos</span>
+          <span><span class="dot exp"></span>Expirados</span>
+        </div>
+      </div>
+      <div class="inv-list" id="inv-list"></div>
+    </div>
+
+    <div class="card chart-card" style="margin-top:20px">
+      <div class="chart-header">
+        <h2 style="margin:0">Ingresos por partido (mercado secundario)</h2>
+        <div style="font-size:12px; color: var(--text-muted)">Suma del precio de venta de los boletos vendidos</div>
+      </div>
+      <div class="chart-box" style="height:480px"><canvas id="chart-ms-ingresos"></canvas></div>
+    </div>
+  </section>
+
+  <!-- PÁGINA: MS POR ZONA -->
+  <section class="page" id="page-ms-zonas">
+    <div class="page-header">
+      <div>
+        <h1>Mercado secundario · Por zona</h1>
+        <div class="subtitle">Qué zonas se venden más y variabilidad de precios</div>
+      </div>
+      <div class="filters" style="margin:0">
+        <div class="field">
+          <label for="f-ms-partido-zona">Partido</label>
+          <select id="f-ms-partido-zona"><option value="">Todos</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="card table-wrap">
+      <table id="tabla-ms-zonas">
+        <thead>
+          <tr>
+            <th class="sortable" data-key="zona">Zona</th>
+            <th class="num sortable" data-key="total">Listings</th>
+            <th class="num sortable" data-key="vendidos">Vendidos</th>
+            <th class="num sortable" data-key="expirados">Expirados</th>
+            <th class="num sortable" data-key="pctVendidos">% vendidos</th>
+            <th class="num sortable" data-key="precioVendProm">Precio prom. vendidos</th>
+            <th class="num sortable" data-key="precioExpProm">Precio prom. expirados</th>
+            <th class="num sortable" data-key="delta">Δ (vend − exp)</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- PÁGINA: DIGITAL FULL -->
+  <section class="page" id="page-full">
+    <div class="page-header">
+      <div>
+        <h1>Digital FULL</h1>
+        <div class="subtitle">Abonados del paquete <b>DIABLO ABONO AP25 - CL26 DIGITAL FULL</b> (separados del resto)</div>
+      </div>
+    </div>
+
+    <div class="kpi-grid" style="margin-bottom:20px">
+      <div class="kpi"><div class="label">Abonados FULL</div><div class="value" id="kpi-full-abonados">—</div></div>
+      <div class="kpi"><div class="label">Partidos</div><div class="value" id="kpi-full-partidos">—</div></div>
+      <div class="kpi"><div class="label">Asistencia prom. / partido</div><div class="value" id="kpi-full-asist">—</div></div>
+      <div class="kpi"><div class="label">Abonos no usados prom. / partido</div><div class="value" id="kpi-full-nousados">—</div></div>
+    </div>
+
+    <div class="card chart-card" style="margin-bottom:20px">
+      <div class="chart-header" style="flex-direction:column; align-items:flex-start; gap:10px">
+        <div style="display:flex; align-items:center; justify-content:space-between; width:100%; flex-wrap:wrap; gap:10px">
+          <div>
+            <h2 style="margin:0">Abonos no usados por partido (FULL)</h2>
+            <div style="font-size:12px; color: var(--text-muted); margin-top:4px">
+              <span style="color: var(--accent)">Click en una barra</span> para ver los abonados FULL que faltaron a ese partido.
+            </div>
+          </div>
+          <button class="reset" id="f-full-partido-clear" style="display:none">Limpiar selección</button>
+        </div>
+      </div>
+      <div class="chart-box" style="height:440px"><canvas id="chart-full-nousados"></canvas></div>
+    </div>
+
+    <div class="card" style="padding:18px 20px; margin-bottom:16px">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px">
+        <div>
+          <h3 style="margin:0; font-size:14px; font-weight:600">Frecuencia de asistencia (FULL)</h3>
+          <div style="font-size:12px; color: var(--text-muted); margin-top:2px">
+            Cuántos abonados FULL asistieron a N partidos · <span style="color: var(--accent)">Click en una barra para filtrar la tabla</span>
+          </div>
+        </div>
+        <button class="reset" id="f-full-bucket-clear" style="display:none">Limpiar selección</button>
+      </div>
+      <div class="chart-box" style="height:280px"><canvas id="chart-full-fid"></canvas></div>
+    </div>
+
+    <div id="full-filter-banner" style="display:none; padding:10px 14px; background: var(--accent-soft); border:1px solid var(--accent); border-radius: 8px; margin-bottom:12px; font-size:13px; color: var(--text); display:flex; align-items:center; justify-content:space-between; gap:10px"></div>
+
+    <div class="filters" style="margin-bottom:12px">
+      <div class="field">
+        <label for="f-full-limit">Mostrar</label>
+        <select id="f-full-limit">
+          <option value="50">Top 50</option>
+          <option value="100">Top 100</option>
+          <option value="250">Top 250</option>
+          <option value="0">Todos</option>
+        </select>
+      </div>
+      <div class="field" style="flex:1; min-width:220px">
+        <label for="f-full-search">Buscar (nombre, correo, ID)</label>
+        <input id="f-full-search" type="search" placeholder="Ej. López, @gmail.com…" />
+      </div>
+    </div>
+
+    <div class="card table-wrap">
+      <table id="tabla-full">
+        <thead>
+          <tr>
+            <th class="sortable" data-key="nombre">Nombre</th>
+            <th class="sortable" data-key="orden">Orden</th>
+            <th class="sortable" data-key="barcode">Código barras</th>
+            <th class="sortable" data-key="asiento">Asiento</th>
+            <th class="sortable" data-key="zona">Zona</th>
+            <th class="sortable" data-key="contacto">Contacto</th>
+            <th class="num sortable" data-key="elegibles">Elegibles</th>
+            <th class="num sortable" data-key="asistidos">Asistidos</th>
+            <th class="num sortable" data-key="pct">% asistencia</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="empty" id="full-empty" style="display:none">No hay abonados FULL que coincidan.</div>
+    </div>
+  </section>
+
+  <!-- PÁGINA: MS REVENDEDORES -->
+  <section class="page" id="page-ms-revendedores">
+    <div class="page-header">
+      <div>
+        <h1>Mercado secundario · Revendedores</h1>
+        <div class="subtitle">Abonados que han puesto a venta sus boletos</div>
+      </div>
+    </div>
+    <div class="filters" style="margin-bottom:12px">
+      <div class="field">
+        <label for="f-ms-partido">Partido</label>
+        <select id="f-ms-partido"><option value="">Todos</option></select>
+      </div>
+      <div class="field">
+        <label for="f-ms-limit">Mostrar</label>
+        <select id="f-ms-limit">
+          <option value="50">Top 50</option>
+          <option value="100">Top 100</option>
+          <option value="250">Top 250</option>
+          <option value="0">Todos</option>
+        </select>
+      </div>
+      <div class="field" style="flex:1; min-width:220px">
+        <label for="f-ms-search">Buscar (nombre, correo, orden)</label>
+        <input id="f-ms-search" type="search" placeholder="Ej. López, @gmail.com…" />
+      </div>
+    </div>
+    <div class="card table-wrap">
+      <table id="tabla-ms">
+        <thead>
+          <tr>
+            <th class="sortable" data-key="nombre">Nombre</th>
+            <th class="sortable" data-key="orden">Orden</th>
+            <th class="sortable" data-key="asiento">Asiento</th>
+            <th class="sortable" data-key="zona">Zona</th>
+            <th class="sortable" data-key="contacto">Contacto</th>
+            <th class="num sortable" data-key="total">Listings</th>
+            <th class="num sortable" data-key="vendidos">Vendidos</th>
+            <th class="num sortable" data-key="expirados">Expirados</th>
+            <th class="sortable" data-key="primer">Primer listing</th>
+            <th class="sortable" data-key="ultimo">Último listing</th>
+            <th class="sortable" data-key="partidos">Partidos listados</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="empty" id="ms-empty" style="display:none">
+        No hay listings que coincidan con los filtros.
+      </div>
+    </div>
+  </section>
+
 </main>
+</div>
 
 <script>
 /* ============================================================
    LÓGICA DEL REPORTE
    ------------------------------------------------------------
-   Estructura esperada de data.json:
+   Estructura esperada de data.json (formato compacto v2-indexed):
 
    {
      "last_updated": "YYYY-MM-DD",
-     "partidos":   [{ "id": "P1", "fecha": "YYYY-MM-DD", "rival": "..." }, ...],
-     "abonados":   [{ "id": "A001", "tipo": "anual"|"semestral",
-                      "vigencia_inicio": "YYYY-MM-DD",
-                      "vigencia_fin":    "YYYY-MM-DD" }, ...],
-     "accesos":    [{ "partido_id": "P1", "abonado_id": "A001" }, ...]
+     "schema": "v2-indexed",
+     "partidos": [{ "id": "P001", "fecha": "YYYY-MM-DD", "rival": "..." }, ...],
+     "abonados": [{ "id": "BARCODE", "tipo": "anual"|"semestral",
+                    "vigencia_inicio": "YYYY-MM-DD",
+                    "vigencia_fin":    "YYYY-MM-DD" }, ...],
+     "accesos":  { "P001": [idx_en_abonados, ...], "P002": [...], ... }
    }
+
+   Los índices en `accesos` apuntan a la posición del abonado dentro del
+   array `abonados`. Es mucho más compacto que repetir los barcodes.
    ============================================================ */
 
 const state = {
-  data: null,     // JSON crudo
+  data: null,             // JSON crudo
+  accesosSets: null,      // Map<partido_id, Set<idx_abonado>>  (precomputado 1 vez)
   filters: {
-    tipo: "ambos",
     desde: null,
     hasta: null,
+    rankLimit: 50,
+    rankSearch: "",
+    rankContact: "todos",  // "todos" | "con" | "sin"
+    rankBucket: null,      // null | N  -> filtra al bucket de N partidos asistidos
+    msPartido: "",
+    msPartidoZona: "",
+    msEstatus: "",
+    msLimit: 50,
+    msSearch: "",
+    fullLimit: 50,
+    fullSearch: "",
+    fullBucket: null,         // N asistencias seleccionadas (histograma FULL)
+    fullPartidoMiss: null,    // P### seleccionado (no usados por partido FULL)
+    chartSort: "cron",  // "cron" | "desc" | "asc"  (gráfica abonos no usados)
   },
-  chartMode: "total",
-  chart: null,
+  // Ámbito de cálculo: "main" = excluye Digital FULL (default), "full" = sólo FULL.
+  scope: "main",
+  // Orden de cada tabla: { key: nombre_columna, dir: "asc"|"desc" }
+  sortPartidos: { key: "fecha",  dir: "asc"  },
+  sortRanking:  { key: "pct",    dir: "asc"  },
+  sortMS:       { key: "total",  dir: "desc" },
+  sortMSZonas:  { key: "total",  dir: "desc" },
+  sortFull:     { key: "pct",    dir: "desc" },
+  chart: null,          // gráfica abonos no usados
+  chartMS: null,        // gráfica MS por partido
+  chartMSIng: null,     // gráfica MS ingresos por partido
+  chartFid: null,       // histograma de fidelidad (Ranking)
+  chartFull: null,      // gráfica no usados Digital FULL
+  chartFullFid: null,   // histograma de fidelidad Digital FULL
 };
+
+// Filtro por ámbito de evento. Devuelve true si el abonado pertenece al scope actual.
+function inScope(a, scope) {
+  scope = scope || state.scope || "main";
+  return scope === "full" ? !!a.esFull : !a.esFull;
+}
 
 // ---------- utilidades -------------------------------------------------
 const $ = (sel) => document.querySelector(sel);
@@ -408,6 +909,11 @@ async function loadData() {
     const res = await fetch("data.json", { cache: "no-store" });
     if (!res.ok) throw new Error("HTTP " + res.status);
     state.data = await res.json();
+    // Precomputa sets de accesos por partido para lookups O(1).
+    state.accesosSets = new Map();
+    for (const [pid, idxs] of Object.entries(state.data.accesos || {})) {
+      state.accesosSets.set(pid, new Set(idxs));
+    }
     $("#last-updated").textContent = fmtDate(state.data.last_updated);
     wireFilters();
     render();
@@ -419,17 +925,130 @@ async function loadData() {
 
 // ---------- filtros ----------------------------------------------------
 function wireFilters() {
-  $("#f-tipo").addEventListener("change", (e) => { state.filters.tipo = e.target.value; render(); });
   $("#f-desde").addEventListener("change", (e) => { state.filters.desde = e.target.value || null; render(); });
   $("#f-hasta").addEventListener("change", (e) => { state.filters.hasta = e.target.value || null; render(); });
   $("#f-reset").addEventListener("click", () => {
-    state.filters = { tipo: "ambos", desde: null, hasta: null };
-    $("#f-tipo").value = "ambos";
+    state.filters.desde = null;
+    state.filters.hasta = null;
     $("#f-desde").value = "";
     $("#f-hasta").value = "";
     render();
   });
-  $("#chart-mode").addEventListener("change", (e) => { state.chartMode = e.target.value; renderChart(); });
+
+  // ranking: límite y búsqueda
+  $("#f-rank-limit").addEventListener("change", (e) => {
+    state.filters.rankLimit = parseInt(e.target.value, 10) || 0;
+    renderRanking();
+  });
+  $("#f-rank-search").addEventListener("input", (e) => {
+    state.filters.rankSearch = e.target.value.trim().toLowerCase();
+    renderRanking();
+  });
+
+  // Tabs de contacto
+  document.querySelectorAll("#rank-contact-tabs button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#rank-contact-tabs button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      state.filters.rankContact = btn.dataset.contact;
+      renderRanking();
+    });
+  });
+
+  // headers ordenables
+  document.querySelectorAll("#tabla-partidos th.sortable").forEach(th => {
+    th.addEventListener("click", () => toggleSort(state.sortPartidos, th.dataset.key, () => renderTablaPartidos(computePartidoStats())));
+  });
+  document.querySelectorAll("#tabla-ranking th.sortable").forEach(th => {
+    th.addEventListener("click", () => toggleSort(state.sortRanking, th.dataset.key, renderRanking));
+  });
+
+  // mercado secundario
+  const rivales = Array.from(new Set((state.data.reventas || []).map(r => r.rival))).sort();
+  const fillSelect = (sel) => {
+    if (!sel) return;
+    for (const rv of rivales) {
+      const opt = document.createElement("option");
+      opt.value = rv; opt.textContent = rv;
+      sel.appendChild(opt);
+    }
+  };
+  fillSelect($("#f-ms-partido"));
+  fillSelect($("#f-ms-partido-zona"));
+
+  $("#f-ms-partido")?.addEventListener("change",  e => { state.filters.msPartido = e.target.value; renderMS(); });
+  $("#f-ms-partido-zona")?.addEventListener("change", e => { state.filters.msPartidoZona = e.target.value; renderMSZonas(); });
+  $("#f-ms-estatus")?.addEventListener("change", e => { state.filters.msEstatus = e.target.value; renderMS(); });
+  $("#f-ms-limit")?.addEventListener("change",   e => { state.filters.msLimit = parseInt(e.target.value,10)||0; renderMS(); });
+  $("#f-ms-search")?.addEventListener("input",   e => { state.filters.msSearch = e.target.value.trim().toLowerCase(); renderMS(); });
+
+  document.querySelectorAll("#tabla-ms th.sortable").forEach(th => {
+    th.addEventListener("click", () => toggleSort(state.sortMS, th.dataset.key, renderMS));
+  });
+  document.querySelectorAll("#tabla-ms-zonas th.sortable").forEach(th => {
+    th.addEventListener("click", () => toggleSort(state.sortMSZonas, th.dataset.key, renderMSZonas));
+  });
+
+  // ---- Navegación entre páginas ----
+  document.querySelectorAll("aside.sidebar .nav-item").forEach(link => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      const page = link.dataset.page;
+      document.querySelectorAll("aside.sidebar .nav-item").forEach(a => a.classList.remove("active"));
+      link.classList.add("active");
+      document.querySelectorAll("main.content .page").forEach(s => s.classList.remove("active"));
+      document.getElementById("page-" + page)?.classList.add("active");
+      // re-render de gráficas que se inicializaron ocultas (Chart.js necesita tamaño visible)
+      if (page === "resumen")     renderChart();
+      if (page === "ranking")     renderHistogramaFidelidad();
+      if (page === "ms-partidos") { renderMSInvList(); renderMSIngresos(); }
+      if (page === "full")        renderFull();
+    });
+  });
+
+  wireFullFilters();
+
+  // Tabs de orden para la gráfica "Abonos no usados por partido"
+  document.querySelectorAll("#chart-sort-tabs button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#chart-sort-tabs button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      state.filters.chartSort = btn.dataset.sort;
+      renderChart();
+    });
+  });
+}
+
+function toggleSort(sortState, key, rerender) {
+  if (sortState.key === key) {
+    sortState.dir = sortState.dir === "asc" ? "desc" : "asc";
+  } else {
+    sortState.key = key;
+    sortState.dir = "asc";
+  }
+  rerender();
+}
+
+function applySortIndicators(tableId, sortState) {
+  document.querySelectorAll(`#${tableId} th.sortable`).forEach(th => {
+    th.classList.remove("sort-asc", "sort-desc");
+    if (th.dataset.key === sortState.key) {
+      th.classList.add(sortState.dir === "asc" ? "sort-asc" : "sort-desc");
+    }
+  });
+}
+
+function sortRows(rows, sortState) {
+  const { key, dir } = sortState;
+  const mul = dir === "asc" ? 1 : -1;
+  return rows.slice().sort((a, b) => {
+    const va = a[key], vb = b[key];
+    if (va == null && vb == null) return 0;
+    if (va == null) return  1;
+    if (vb == null) return -1;
+    if (typeof va === "number" && typeof vb === "number") return (va - vb) * mul;
+    return String(va).localeCompare(String(vb), "es") * mul;
+  });
 }
 
 // ---------- lógica de negocio -----------------------------------------
@@ -439,12 +1058,6 @@ function isEligible(abonado, fechaPartido) {
   const ini = parseISO(abonado.vigencia_inicio);
   const fin = parseISO(abonado.vigencia_fin);
   return f >= ini && f <= fin;
-}
-
-// Aplica filtro global de tipo de abono
-function tipoMatches(abonado) {
-  if (state.filters.tipo === "ambos") return true;
-  return abonado.tipo === state.filters.tipo;
 }
 
 // Filtra partidos por rango de fechas
@@ -459,72 +1072,95 @@ function partidosFiltrados() {
     .sort((a,b) => a.fecha.localeCompare(b.fecha));
 }
 
-// Calcula estadísticas por partido respetando los filtros de tipo
-function computePartidoStats() {
+// Calcula estadísticas por partido
+function computePartidoStats(scope) {
   const partidos = partidosFiltrados();
-  const abonados = state.data.abonados.filter(tipoMatches);
-  const accesosSet = new Set(
-    state.data.accesos.map(a => a.partido_id + "|" + a.abonado_id)
-  );
-  const abonadosById = new Map(state.data.abonados.map(a => [a.id, a]));
+  const allAbonados = state.data.abonados;
 
   return partidos.map(p => {
-    const elegibles = abonados.filter(a => isEligible(a, p.fecha));
-    const elegiblesAnual     = elegibles.filter(a => a.tipo === "anual").length;
-    const elegiblesSemestral = elegibles.filter(a => a.tipo === "semestral").length;
+    const accSet = state.accesosSets.get(p.id) || new Set();
+    let elegibles = 0, asistencias = 0;
 
-    let asistencias = 0, asistAnual = 0, asistSemestral = 0;
-    for (const a of elegibles) {
-      if (accesosSet.has(p.id + "|" + a.id)) {
-        asistencias++;
-        if (a.tipo === "anual") asistAnual++; else asistSemestral++;
-      }
+    for (let i = 0; i < allAbonados.length; i++) {
+      if (!inScope(allAbonados[i], scope)) continue;
+      if (!isEligible(allAbonados[i], p.fecha)) continue;
+      elegibles++;
+      if (accSet.has(i)) asistencias++;
     }
-    const totalElegibles = elegibles.length;
-    const ausencias      = totalElegibles - asistencias;
-    const ausenciasAnual     = elegiblesAnual - asistAnual;
-    const ausenciasSemestral = elegiblesSemestral - asistSemestral;
-
+    const ausencias = elegibles - asistencias;
     return {
       partido: p,
-      elegibles: totalElegibles,
-      elegiblesAnual, elegiblesSemestral,
+      elegibles,
       asistencias,
       ausencias,
-      ausenciasAnual, ausenciasSemestral,
-      pctUso: totalElegibles > 0 ? asistencias / totalElegibles : 0,
+      pctUso: elegibles > 0 ? asistencias / elegibles : 0,
     };
   });
 }
 
 // Ranking por abonado: % asistencia entre los partidos donde fue elegible
-function computeRanking() {
-  const partidos = partidosFiltrados();
-  const abonados = state.data.abonados.filter(tipoMatches);
-  const accesosSet = new Set(
-    state.data.accesos.map(a => a.partido_id + "|" + a.abonado_id)
-  );
+function computeRanking(opts) {
+  opts = opts || {};
+  const scope      = opts.scope      || "main";
+  const search     = opts.search     != null ? opts.search     : state.filters.rankSearch;
+  const contact    = opts.contact    != null ? opts.contact    : state.filters.rankContact;
+  const bucketFilt = opts.bucketFilt != null ? opts.bucketFilt : state.filters.rankBucket;
 
-  const rows = abonados.map(a => {
+  const partidos = partidosFiltrados();
+  const allAbonados = state.data.abonados;
+  const q = search;
+
+  const fc = contact;  // "todos" | "con" | "sin"
+  const hasContact = (a) => !!(a.correo || a.telefono);
+
+  const rows = [];
+  for (let i = 0; i < allAbonados.length; i++) {
+    const a = allAbonados[i];
+    if (!inScope(a, scope)) continue;
+
+    // Filtro de contacto
+    if (fc === "con" && !hasContact(a)) continue;
+    if (fc === "sin" &&  hasContact(a)) continue;
+
+    // Filtro de búsqueda (nombre, correo, id, teléfono, orden, barcode)
+    if (q) {
+      const hay =
+        (a.nombre   || "").toLowerCase().includes(q) ||
+        (a.correo   || "").toLowerCase().includes(q) ||
+        (a.telefono || "").toLowerCase().includes(q) ||
+        (a.id       || "").toLowerCase().includes(q) ||
+        (a.orden    || "").toLowerCase().includes(q) ||
+        (a.barcode  || "").toLowerCase().includes(q);
+      if (!hay) continue;
+    }
+
     let elegibles = 0, asistidos = 0;
     for (const p of partidos) {
-      if (isEligible(a, p.fecha)) {
-        elegibles++;
-        if (accesosSet.has(p.id + "|" + a.id)) asistidos++;
-      }
+      if (!isEligible(a, p.fecha)) continue;
+      elegibles++;
+      const accSet = state.accesosSets.get(p.id);
+      if (accSet && accSet.has(i)) asistidos++;
     }
-    return {
+    if (elegibles === 0) continue;
+    // Filtro por bucket de asistencia (viene del histograma)
+    if (bucketFilt != null && asistidos !== bucketFilt) continue;
+    rows.push({
+      _idx: i,
       id: a.id,
+      nombre:   a.nombre   || "",
+      correo:   a.correo   || "",
+      telefono: a.telefono || "",
+      zona:     a.zona     || "",
+      asiento:  a.asiento  || "",
+      orden:    a.orden    || "",
+      barcode:  a.barcode  || "",
       tipo: a.tipo,
       elegibles,
       asistidos,
-      pct: elegibles > 0 ? asistidos / elegibles : null,
-    };
-  })
-  .filter(r => r.elegibles > 0)                // ignora abonados sin partidos elegibles
-  .sort((x, y) => (x.pct ?? 1) - (y.pct ?? 1)) // menor % primero
-  .slice(0, 50);
-
+      pct: asistidos / elegibles,
+      contacto: (a.correo || a.telefono || "").toLowerCase(), // sólo para orden
+    });
+  }
   return rows;
 }
 
@@ -535,33 +1171,480 @@ function render() {
   renderTablaPartidos(stats);
   renderChart(stats);
   renderRanking();
+  renderMS();
+  renderFull();
+}
+
+// ---------- mercado secundario ----------------------------------------
+// Agrega listings por abonado aplicando filtros globales y de MS.
+function computeMS(scope) {
+  const all = state.data.reventas || [];
+  const fp  = state.filters.msPartido;
+  const fe  = state.filters.msEstatus;
+  const q   = state.filters.msSearch;
+  const abonados = state.data.abonados;
+
+  const agg = new Map(); // idx_abonado -> agregado
+  let totalListings = 0, totalVend = 0, totalExp = 0;
+
+  for (const r of all) {
+    const a = abonados[r.a];
+    if (!a || !inScope(a, scope)) continue;
+    if (fp && r.rival !== fp) continue;
+    if (fe && r.estatus !== fe) continue;
+    totalListings++;
+    if (r.estatus === "vendido")  totalVend++;
+    else if (r.estatus === "expirado") totalExp++;
+    if (q) {
+      const hay =
+        (a.nombre   || "").toLowerCase().includes(q) ||
+        (a.correo   || "").toLowerCase().includes(q) ||
+        (a.telefono || "").toLowerCase().includes(q) ||
+        (a.orden    || "").toLowerCase().includes(q);
+      if (!hay) continue;
+    }
+
+    let o = agg.get(r.a);
+    if (!o) {
+      o = {
+        idx: r.a,
+        nombre:  a.nombre  || "",
+        orden:   a.orden   || "",
+        asiento: a.asiento || "",
+        zona:    a.zona    || "",
+        correo:  a.correo  || "",
+        telefono:a.telefono|| "",
+        contacto:(a.correo || a.telefono || "").toLowerCase(),
+        total: 0, vendidos: 0, expirados: 0, disponibles: 0,
+        primer: null, ultimo: null,
+        rivalesSet: new Set(),
+      };
+      agg.set(r.a, o);
+    }
+    o.total++;
+    if      (r.estatus === "vendido")    o.vendidos++;
+    else if (r.estatus === "expirado")   o.expirados++;
+    else if (r.estatus === "disponible") o.disponibles++;
+    if (r.fecha) {
+      if (!o.primer || r.fecha < o.primer) o.primer = r.fecha;
+      if (!o.ultimo || r.fecha > o.ultimo) o.ultimo = r.fecha;
+    }
+    o.rivalesSet.add(r.rival);
+  }
+
+  const rows = Array.from(agg.values()).map(o => ({
+    ...o,
+    partidos: Array.from(o.rivalesSet).sort().join(", "),
+    partidosCount: o.rivalesSet.size,
+  }));
+
+  return { rows, totalListings, totalVend, totalExp };
+}
+
+function msCountsByRival(scope) {
+  const fe = state.filters.msEstatus;
+  const abonados = state.data.abonados;
+  const byRival = new Map();
+  for (const r of (state.data.reventas || [])) {
+    const a = abonados[r.a];
+    if (!a || !inScope(a, scope)) continue;
+    if (fe && r.estatus !== fe) continue;
+    const cur = byRival.get(r.rival) || { total: 0, vendidos: 0, expirados: 0 };
+    cur.total++;
+    if (r.estatus === "vendido")  cur.vendidos++;
+    if (r.estatus === "expirado") cur.expirados++;
+    byRival.set(r.rival, cur);
+  }
+  return byRival;
+}
+
+function renderHistogramaFidelidad() {
+  const ctx = document.getElementById("chart-fidelidad");
+  if (!ctx) return;
+
+  const partidos = partidosFiltrados();
+  const nPart    = partidos.length;
+  const abonados = state.data.abonados;
+
+  // Cuenta de asistencias por abonado (solo sobre partidos elegibles + filtrados).
+  // Bucket: N partidos asistidos -> conteo, separado por con/sin contacto.
+  const bucketsCon = new Array(nPart + 1).fill(0);
+  const bucketsSin = new Array(nPart + 1).fill(0);
+
+  for (let i = 0; i < abonados.length; i++) {
+    const a = abonados[i];
+    if (!inScope(a, "main")) continue;
+    let asistidos = 0;
+    for (const p of partidos) {
+      if (!isEligible(a, p.fecha)) continue;
+      const s = state.accesosSets.get(p.id);
+      if (s && s.has(i)) asistidos++;
+    }
+    const hasC = !!(a.correo || a.telefono);
+    if (hasC) bucketsCon[asistidos]++;
+    else      bucketsSin[asistidos]++;
+  }
+
+  const labels = bucketsCon.map((_, i) => String(i));
+
+  // Resalta el bucket actualmente seleccionado (si hay filtro activo)
+  const sel = state.filters.rankBucket;
+  const bgCon = bucketsCon.map((_, i) =>
+    sel == null ? "#ef4444" : (i === sel ? "#ef4444" : "#ef444455"));
+  const bgSin = bucketsSin.map((_, i) =>
+    sel == null ? "#7f1d1d" : (i === sel ? "#7f1d1d" : "#7f1d1d55"));
+
+  // Totales por bucket para mostrar porcentaje en tooltip
+  const totalAll = bucketsCon.reduce((s, v, i) => s + v + bucketsSin[i], 0) || 1;
+
+  // Plugin inline: dibuja el total (con+sin) encima de cada columna apilada.
+  const totalsPlugin = {
+    id: "totalsOnTop",
+    afterDatasetsDraw(chart) {
+      const { ctx, scales: { x, y } } = chart;
+      ctx.save();
+      ctx.font = "600 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillStyle = "#e7ebf3";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "bottom";
+      for (let i = 0; i < bucketsCon.length; i++) {
+        const total = bucketsCon[i] + bucketsSin[i];
+        if (!total) continue;
+        const px = x.getPixelForValue(i);
+        const py = y.getPixelForValue(total) - 4;
+        ctx.fillText(total.toLocaleString("es-MX"), px, py);
+      }
+      ctx.restore();
+    }
+  };
+
+  if (state.chartFid) state.chartFid.destroy();
+  state.chartFid = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        { label: "Con contacto", data: bucketsCon, backgroundColor: bgCon, borderRadius: 4, stack: "f" },
+        { label: "Sin contacto", data: bucketsSin, backgroundColor: bgSin, borderRadius: 4, stack: "f" },
+      ]
+    },
+    plugins: [totalsPlugin],
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 18 } },
+      onClick: (evt, elements) => {
+        if (!elements || !elements.length) return;
+        const idx = elements[0].index;
+        // toggle: mismo bucket otra vez => limpia filtro
+        state.filters.rankBucket = (state.filters.rankBucket === idx) ? null : idx;
+        renderRanking();
+      },
+      onHover: (evt, elements) => {
+        evt.native.target.style.cursor = elements.length ? "pointer" : "default";
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => `${items[0].label} partidos asistidos`,
+            label: (c) => `${c.dataset.label}: ${c.parsed.y.toLocaleString("es-MX")}`,
+            footer: (items) => {
+              const sum = items.reduce((s, it) => s + it.parsed.y, 0);
+              const pct = (sum / totalAll * 100).toFixed(1);
+              return `Total: ${sum.toLocaleString("es-MX")} abonados (${pct}%)\nClick para filtrar la tabla`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { stacked: true, title: { display: true, text: "Partidos asistidos", color: "#8a92a5" },
+             ticks: { color: "#8a92a5" }, grid: { color: "rgba(255,255,255,.04)" } },
+        y: { stacked: true, ticks: { color: "#8a92a5", precision: 0 },
+             grid: { color: "rgba(255,255,255,.06)" }, beginAtZero: true }
+      }
+    }
+  });
+
+  // Botón para limpiar selección
+  const btn = document.getElementById("f-rank-bucket-clear");
+  if (btn) {
+    btn.style.display = state.filters.rankBucket == null ? "none" : "inline-block";
+    btn.onclick = () => { state.filters.rankBucket = null; renderRanking(); };
+  }
+}
+
+function renderMSInvList() {
+  const el = document.getElementById("inv-list");
+  if (!el) return;
+  const byRival = msCountsByRival();
+  const rows = Array.from(byRival.entries())
+    .map(([rival, v]) => ({ rival, ...v }))
+    .sort((a,b) => b.total - a.total);
+  // Escala absoluta: el partido con más ventas tiene el segmento rojo más
+  // largo. Ya no se normaliza cada barra al 100% — se usa el máximo de
+  // vendidos (o total, lo que sea mayor) como denominador global para que
+  // las diferencias de volumen de ventas salten a la vista.
+  const maxSold  = rows.reduce((m, r) => Math.max(m, r.vendidos),  0);
+  const maxTotal = rows.reduce((m, r) => Math.max(m, r.total),     0);
+  const scale    = Math.max(maxSold, maxTotal) || 1;
+
+  // Si un segmento ocupa <7% del bar global, su número se muestra afuera.
+  const OUTSIDE_THRESHOLD = 7;
+
+  el.innerHTML = rows.map(r => {
+    const soldW = (r.vendidos  / scale) * 100;
+    const expW  = (r.expirados / scale) * 100;
+    const soldInside = soldW >= OUTSIDE_THRESHOLD;
+    const expInside  = expW  >= OUTSIDE_THRESHOLD;
+
+    const soldStr = r.vendidos  ? r.vendidos.toLocaleString("es-MX")  : "";
+    const expStr  = r.expirados ? r.expirados.toLocaleString("es-MX") : "";
+
+    const extras = [];
+    if (r.vendidos  && !soldInside) extras.push(`<span class="x-sold">${soldStr}</span>`);
+    if (r.expirados && !expInside)  extras.push(`<span class="x-exp">${expStr}</span>`);
+    const extHTML = extras.length ? `<div class="inv-ext">${extras.join("")}</div>` : "";
+
+    return `
+      <div class="inv-row">
+        <div class="name">${escapeHTML(r.rival)}</div>
+        <div class="inv-bar-wrap">
+          <div class="inv-bar">
+            <div class="seg sold ${soldInside ? "" : "empty-lbl"}" style="width:${soldW.toFixed(2)}%">${soldInside ? soldStr : ""}</div>
+            <div class="seg exp  ${expInside  ? "" : "empty-lbl"}" style="width:${expW.toFixed(2)}%">${expInside ? expStr : ""}</div>
+          </div>
+          ${extHTML}
+        </div>
+        <div class="total">${r.total.toLocaleString("es-MX")}</div>
+      </div>`;
+  }).join("");
+}
+
+function computeMSZonas(scope) {
+  const fp = state.filters.msPartidoZona;  // filtro propio de la página "Por zona"
+  const fe = null;                          // estatus no aplica en análisis por zona
+  const abonados = state.data.abonados;
+  const agg = new Map();  // zona -> { total, vendidos, expirados, preciosV, preciosE }
+
+  for (const r of (state.data.reventas || [])) {
+    const a = abonados[r.a];
+    if (!a || !inScope(a, scope)) continue;
+    if (fp && r.rival !== fp) continue;
+    if (fe && r.estatus !== fe) continue;
+    const zona = a.zona || "(sin zona)";
+    let o = agg.get(zona);
+    if (!o) { o = { zona, total: 0, vendidos: 0, expirados: 0, preciosV: [], preciosE: [] }; agg.set(zona, o); }
+    o.total++;
+    if (r.estatus === "vendido")  { o.vendidos++;  if (typeof r.precio === "number") o.preciosV.push(r.precio); }
+    if (r.estatus === "expirado") { o.expirados++; if (typeof r.precio === "number") o.preciosE.push(r.precio); }
+  }
+  const avg = arr => arr.length ? arr.reduce((s,x)=>s+x,0)/arr.length : null;
+  return Array.from(agg.values()).map(o => {
+    const pV = avg(o.preciosV), pE = avg(o.preciosE);
+    return {
+      zona: o.zona,
+      total: o.total,
+      vendidos: o.vendidos,
+      expirados: o.expirados,
+      pctVendidos: o.total > 0 ? o.vendidos / o.total : 0,
+      precioVendProm: pV,
+      precioExpProm: pE,
+      delta: (pV != null && pE != null) ? pV - pE : null,
+    };
+  });
+}
+
+function renderMSZonas() {
+  const tbody = document.querySelector("#tabla-ms-zonas tbody");
+  if (!tbody) return;
+  const rows = sortRows(computeMSZonas(), state.sortMSZonas);
+  applySortIndicators("tabla-ms-zonas", state.sortMSZonas);
+  tbody.innerHTML = "";
+  const money = n => n == null ? "—" : "$" + Math.round(n).toLocaleString("es-MX");
+  const frag = document.createDocumentFragment();
+  for (const r of rows) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHTML(r.zona)}</td>
+      <td class="num">${r.total.toLocaleString("es-MX")}</td>
+      <td class="num">${r.vendidos.toLocaleString("es-MX")}</td>
+      <td class="num">${r.expirados.toLocaleString("es-MX")}</td>
+      <td class="num">${fmtPct(r.pctVendidos)}<span class="pct-bar"><span style="width:${Math.round(r.pctVendidos*100)}%"></span></span></td>
+      <td class="num">${money(r.precioVendProm)}</td>
+      <td class="num">${money(r.precioExpProm)}</td>
+      <td class="num">${r.delta == null ? "—" : (r.delta >= 0 ? "+" : "") + money(r.delta)}</td>
+    `;
+    frag.appendChild(tr);
+  }
+  tbody.appendChild(frag);
+}
+
+function renderMSIngresos() {
+  const ctx = document.getElementById("chart-ms-ingresos");
+  if (!ctx) return;
+  const abonados = state.data.abonados;
+  const byRival = new Map();
+  for (const r of (state.data.reventas || [])) {
+    if (r.estatus !== "vendido") continue;
+    if (typeof r.precio !== "number") continue;
+    const a = abonados[r.a];
+    if (!a || !inScope(a, "main")) continue;
+    const cur = byRival.get(r.rival) || { ingresos: 0, unidades: 0 };
+    cur.ingresos += r.precio;
+    cur.unidades += 1;
+    byRival.set(r.rival, cur);
+  }
+  const rows = Array.from(byRival.entries())
+    .map(([rival, v]) => ({ rival, ...v }))
+    .sort((a, b) => b.ingresos - a.ingresos);
+
+  const labels = rows.map(r => r.rival);
+  const serie  = rows.map(r => r.ingresos);
+  const units  = rows.map(r => r.unidades);
+  const money  = n => "$" + Math.round(n).toLocaleString("es-MX");
+
+  const totalsOnBars = {
+    id: "totalsOnBarsMSIng",
+    afterDatasetsDraw(chart) {
+      const { ctx: c, scales: { x, y } } = chart;
+      c.save();
+      c.font = "600 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      c.fillStyle = "#e7ebf3";
+      c.textBaseline = "middle";
+      c.textAlign = "left";
+      for (let i = 0; i < serie.length; i++) {
+        if (!serie[i]) continue;
+        c.fillText(money(serie[i]), x.getPixelForValue(serie[i]) + 6, y.getPixelForValue(i));
+      }
+      c.restore();
+    }
+  };
+
+  if (state.chartMSIng) state.chartMSIng.destroy();
+  state.chartMSIng = new Chart(ctx, {
+    type: "bar",
+    data: { labels, datasets: [{ label: "Ingresos", data: serie, backgroundColor: "#ef4444", borderRadius: 4 }] },
+    plugins: [totalsOnBars],
+    options: {
+      indexAxis: "y",
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { right: 90 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (c) => `${money(c.parsed.x)} · ${units[c.dataIndex].toLocaleString("es-MX")} boletos vendidos`
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: "#9098a9", callback: v => "$" + (v/1000) + "k" }, grid: { color: "rgba(255,255,255,.06)" }, beginAtZero: true },
+        y: { ticks: { color: "#e7ebf3", font: { weight: "600" } }, grid: { color: "rgba(255,255,255,.04)" } }
+      }
+    }
+  });
+}
+
+function renderMS() {
+  if (!$("#tabla-ms")) return;
+  renderMSInvList();
+  renderMSIngresos();
+  renderMSZonas();
+  const { rows, totalListings, totalVend, totalExp } = computeMS();
+
+  // Ingresos totales y precio promedio (filtrando por mismo scope + filtros MS)
+  const abonados = state.data.abonados;
+  const fp = state.filters.msPartido, fe = state.filters.msEstatus;
+  let ingTotal = 0, ingCount = 0;
+  for (const r of (state.data.reventas || [])) {
+    if (r.estatus !== "vendido") continue;
+    if (typeof r.precio !== "number") continue;
+    if (fp && r.rival !== fp) continue;
+    if (fe && r.estatus !== fe) continue;
+    const a = abonados[r.a];
+    if (!a || !inScope(a, "main")) continue;
+    ingTotal += r.precio; ingCount++;
+  }
+  const money = n => "$" + Math.round(n).toLocaleString("es-MX");
+
+  $("#kpi-ms-total").textContent        = totalListings.toLocaleString("es-MX");
+  $("#kpi-ms-vendidos").textContent     = totalVend.toLocaleString("es-MX");
+  $("#kpi-ms-ingresos").textContent     = ingTotal ? money(ingTotal) : "$0";
+  $("#kpi-ms-precio-prom").textContent  = ingCount ? money(ingTotal / ingCount) : "—";
+  $("#kpi-ms-expirados").textContent    = totalExp.toLocaleString("es-MX");
+  $("#kpi-ms-vendedores").textContent   = rows.length.toLocaleString("es-MX");
+
+  // Orden (default: total desc)
+  const sorted = sortRows(rows, state.sortMS);
+  const limit  = state.filters.msLimit || sorted.length;
+  const view   = limit > 0 ? sorted.slice(0, limit) : sorted;
+
+  const tbody = $("#tabla-ms tbody");
+  tbody.innerHTML = "";
+  $("#ms-empty").style.display = view.length ? "none" : "block";
+  applySortIndicators("tabla-ms", state.sortMS);
+
+  const frag = document.createDocumentFragment();
+  for (const r of view) {
+    const contacto = [r.correo, r.telefono].filter(Boolean).join(" · ");
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHTML(r.nombre) || "<span class='muted'>—</span>"}</td>
+      <td class="muted">${escapeHTML(r.orden)}</td>
+      <td class="muted">${escapeHTML(r.asiento) || "—"}</td>
+      <td class="muted">${escapeHTML(r.zona) || "—"}</td>
+      <td class="muted">${escapeHTML(contacto) || "—"}</td>
+      <td class="num">${r.total}</td>
+      <td class="num">${r.vendidos}</td>
+      <td class="num">${r.expirados}</td>
+      <td class="muted">${r.primer ? fmtDate(r.primer) : "—"}</td>
+      <td class="muted">${r.ultimo ? fmtDate(r.ultimo) : "—"}</td>
+      <td class="muted" title="${escapeHTML(r.partidos)}">${r.partidosCount} (${escapeHTML(r.partidos).slice(0, 40)}${r.partidos.length > 40 ? "…" : ""})</td>
+    `;
+    frag.appendChild(tr);
+  }
+  tbody.appendChild(frag);
 }
 
 function renderKPIs(stats) {
-  const abonados = state.data.abonados;
-  const anuales      = abonados.filter(a => a.tipo === "anual").length;
-  const semestrales  = abonados.filter(a => a.tipo === "semestral").length;
+  const abonados = state.data.abonados.filter(a => !a.esFull);
+  const totalAsist = stats.reduce((s, x) => s + x.asistencias, 0);
+  const totalAusen = stats.reduce((s, x) => s + x.ausencias, 0);
+  const n = stats.length || 1;
+  const asistProm = Math.round(totalAsist / n);
+  const ausenProm = Math.round(totalAusen / n);
+  const base      = abonados.length || 1;
 
-  const totalAsist   = stats.reduce((s, x) => s + x.asistencias, 0);
-  const totalAusen   = stats.reduce((s, x) => s + x.ausencias, 0);
-  const n            = stats.length || 1;
+  const pct = (v) => `<span style="font-size:13px; font-weight:500; color: var(--text-muted); margin-left:6px">${(v/base*100).toFixed(1)}%</span>`;
 
-  $("#kpi-anuales").textContent        = anuales.toLocaleString("es-MX");
-  $("#kpi-semestrales").textContent    = semestrales.toLocaleString("es-MX");
-  $("#kpi-asist-prom").textContent     = Math.round(totalAsist / n).toLocaleString("es-MX");
-  $("#kpi-nousados-prom").textContent  = Math.round(totalAusen / n).toLocaleString("es-MX");
+  $("#kpi-anuales").textContent  = abonados.length.toLocaleString("es-MX");
+  $("#kpi-partidos").textContent = stats.length.toLocaleString("es-MX");
+  $("#kpi-asist-prom").innerHTML    = `${asistProm.toLocaleString("es-MX")}${pct(asistProm)}`;
+  $("#kpi-nousados-prom").innerHTML = `${ausenProm.toLocaleString("es-MX")}${pct(ausenProm)}`;
 }
 
 function renderTablaPartidos(stats) {
   const tbody = $("#tabla-partidos tbody");
   tbody.innerHTML = "";
   $("#partidos-empty").style.display = stats.length ? "none" : "block";
+  applySortIndicators("tabla-partidos", state.sortPartidos);
 
-  for (const s of stats) {
+  // Prepara filas planas para ordenar (sin perder referencia al partido).
+  const flat = stats.map(s => ({
+    fecha: s.partido.fecha,
+    rival: s.partido.rival || "",
+    elegibles: s.elegibles,
+    asistencias: s.asistencias,
+    ausencias: s.ausencias,
+    pctUso: s.pctUso,
+  }));
+  const sorted = sortRows(flat, state.sortPartidos);
+
+  for (const s of sorted) {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${fmtDate(s.partido.fecha)}</td>
-      <td>${s.partido.rival || "—"}</td>
+      <td>${fmtDate(s.fecha)}</td>
+      <td>${s.rival || "—"}</td>
       <td class="num">${s.elegibles.toLocaleString("es-MX")}</td>
       <td class="num">${s.asistencias.toLocaleString("es-MX")}</td>
       <td class="num">${s.ausencias.toLocaleString("es-MX")}</td>
@@ -575,17 +1658,38 @@ function renderTablaPartidos(stats) {
 }
 
 function renderRanking() {
+  // Conteos para las pestañas (sin depender del filtro actual de contacto).
+  // Los conteos excluyen Digital FULL (se muestran en su propia sección).
+  const abonados = state.data.abonados.filter(a => !a.esFull);
+  let conC = 0, sinC = 0;
+  for (const a of abonados) { if (a.correo || a.telefono) conC++; else sinC++; }
+  $("#tab-count-todos").textContent = abonados.length.toLocaleString("es-MX");
+  $("#tab-count-con").textContent   = conC.toLocaleString("es-MX");
+  $("#tab-count-sin").textContent   = sinC.toLocaleString("es-MX");
+
+  renderHistogramaFidelidad();
+
   const rows = computeRanking();
+  const sorted = sortRows(rows, state.sortRanking);
+  const limit = state.filters.rankLimit || sorted.length;
+  const view = limit > 0 ? sorted.slice(0, limit) : sorted;
+
   const tbody = $("#tabla-ranking tbody");
   tbody.innerHTML = "";
-  $("#ranking-empty").style.display = rows.length ? "none" : "block";
+  $("#ranking-empty").style.display = view.length ? "none" : "block";
+  applySortIndicators("tabla-ranking", state.sortRanking);
 
-  for (const r of rows) {
+  const frag = document.createDocumentFragment();
+  for (const r of view) {
     const tr = document.createElement("tr");
-    const tagClass = r.tipo === "semestral" ? "tag semestral" : "tag";
+    const contacto = [r.correo, r.telefono].filter(Boolean).join(" · ");
     tr.innerHTML = `
-      <td>${r.id}</td>
-      <td><span class="${tagClass}">${r.tipo}</span></td>
+      <td>${escapeHTML(r.nombre) || "<span class='muted'>—</span>"}</td>
+      <td class="muted">${escapeHTML(r.orden)}</td>
+      <td class="muted">${escapeHTML(r.barcode) || "—"}</td>
+      <td class="muted">${escapeHTML(r.asiento) || "—"}</td>
+      <td class="muted">${escapeHTML(r.zona) || "—"}</td>
+      <td class="muted">${escapeHTML(contacto) || "—"}</td>
       <td class="num">${r.elegibles}</td>
       <td class="num">${r.asistidos}</td>
       <td class="num">
@@ -593,45 +1697,355 @@ function renderRanking() {
         <span class="pct-bar"><span style="width:${Math.round((r.pct||0)*100)}%"></span></span>
       </td>
     `;
-    tbody.appendChild(tr);
+    frag.appendChild(tr);
   }
+  tbody.appendChild(frag);
+}
+
+function escapeHTML(s) {
+  return String(s || "").replace(/[&<>"']/g, c =>
+    ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]));
 }
 
 function renderChart(precomputed) {
-  const stats = precomputed || computePartidoStats();
-  const labels = stats.map(s => `${fmtDate(s.partido.fecha)}${s.partido.rival ? " · " + s.partido.rival : ""}`);
-  let serie;
-  if (state.chartMode === "anual")         serie = stats.map(s => s.ausenciasAnual);
-  else if (state.chartMode === "semestral") serie = stats.map(s => s.ausenciasSemestral);
-  else                                      serie = stats.map(s => s.ausencias);
+  const rawStats = precomputed || computePartidoStats();
+  const sortMode = state.filters.chartSort || "cron";
+  let stats = rawStats.slice();
+  if (sortMode === "desc")      stats.sort((a,b) => b.ausencias - a.ausencias);
+  else if (sortMode === "asc")  stats.sort((a,b) => a.ausencias - b.ausencias);
+  // "cron": conserva el orden cronológico de computePartidoStats
+
+  const labels = stats.map(s => s.partido.rival || "—");
+  const serie  = stats.map(s => s.ausencias);
+  const pcts   = stats.map(s => s.elegibles > 0 ? s.ausencias / s.elegibles : 0);
+  const maxV   = serie.reduce((m,v) => Math.max(m,v), 0) || 1;
+
+  // Color por magnitud: más rojo intenso = más abonos no usados
+  const bgColors = serie.map(v => {
+    const t = v / maxV;                 // 0..1
+    const alpha = 0.35 + t * 0.65;      // 0.35..1
+    return `rgba(239, 68, 68, ${alpha.toFixed(3)})`;
+  });
 
   const ctx = document.getElementById("chart-nousados");
+  if (!ctx) return;
+
+  // Plugin: dibuja "N (P%)" al final de cada barra horizontal
+  const totalsOnBars = {
+    id: "totalsOnBarsResumen",
+    afterDatasetsDraw(chart) {
+      const { ctx: c, scales: { x, y } } = chart;
+      c.save();
+      c.font = "600 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      c.textBaseline = "middle";
+      c.textAlign = "left";
+      for (let i = 0; i < serie.length; i++) {
+        const v = serie[i];
+        if (!v) continue;
+        const px = x.getPixelForValue(v) + 6;
+        const py = y.getPixelForValue(i);
+        c.fillStyle = "#e7ebf3";
+        c.fillText(v.toLocaleString("es-MX"), px, py);
+        const w = c.measureText(v.toLocaleString("es-MX")).width;
+        c.fillStyle = "#8a92a5";
+        c.fillText(` (${(pcts[i]*100).toFixed(1)}%)`, px + w, py);
+      }
+      c.restore();
+    }
+  };
+
   if (state.chart) state.chart.destroy();
   state.chart = new Chart(ctx, {
     type: "bar",
     data: {
       labels,
       datasets: [{
-        label: state.chartMode === "anual"     ? "Anuales no usados"
-             : state.chartMode === "semestral" ? "Semestrales no usados"
-             :                                   "Abonos no usados (total)",
+        label: "Abonos no usados",
         data: serie,
-        backgroundColor: "#2563eb",
+        backgroundColor: bgColors,
         borderRadius: 4,
       }]
     },
+    plugins: [totalsOnBars],
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
+      indexAxis: "y",
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { right: 90 } },
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: (ctx) => ctx.parsed.y.toLocaleString("es-MX") } }
+        tooltip: {
+          callbacks: {
+            label: (c) => {
+              const s = stats[c.dataIndex];
+              const pctStr = s.elegibles > 0 ? ` (${(s.ausencias/s.elegibles*100).toFixed(1)}% de elegibles)` : "";
+              return `${s.ausencias.toLocaleString("es-MX")} no usados${pctStr}`;
+            },
+            afterLabel: (c) => {
+              const s = stats[c.dataIndex];
+              return `Elegibles: ${s.elegibles.toLocaleString("es-MX")} · Asistieron: ${s.asistencias.toLocaleString("es-MX")}`;
+            }
+          }
+        }
       },
       scales: {
-        x: { ticks: { maxRotation: 60, minRotation: 0, autoSkip: true } },
-        y: { beginAtZero: true, ticks: { precision: 0 } }
+        x: { ticks: { color: "#9098a9", precision: 0 }, grid: { color: "rgba(255,255,255,.06)" }, beginAtZero: true },
+        y: { ticks: { color: "#e7ebf3", font: { weight: "600" } }, grid: { color: "rgba(255,255,255,.04)" } }
       }
     }
+  });
+}
+
+// ---------- Digital FULL (página dedicada) -----------------------------
+function renderFull() {
+  if (!$("#tabla-full")) return;
+
+  // 1) KPIs
+  const fullCount = state.data.abonados.reduce((s,a) => s + (a.esFull ? 1 : 0), 0);
+  const stats = computePartidoStats("full");
+  const totalAsist = stats.reduce((s,x) => s + x.asistencias, 0);
+  const totalAusen = stats.reduce((s,x) => s + x.ausencias,   0);
+  const n = stats.length || 1;
+
+  $("#kpi-full-abonados").textContent = fullCount.toLocaleString("es-MX");
+  $("#kpi-full-partidos").textContent = stats.length.toLocaleString("es-MX");
+  $("#kpi-full-asist").textContent    = Math.round(totalAsist / n).toLocaleString("es-MX");
+  $("#kpi-full-nousados").textContent = Math.round(totalAusen / n).toLocaleString("es-MX");
+
+  // 2) Gráfica de no usados por partido (horizontal, rojo, con etiquetas y %)
+  const ctx1 = document.getElementById("chart-full-nousados");
+  if (ctx1) {
+    const labels = stats.map(s => s.partido.rival || "—");
+    const serie  = stats.map(s => s.ausencias);
+    const pcts   = stats.map(s => s.elegibles > 0 ? s.ausencias / s.elegibles : 0);
+    const pids   = stats.map(s => s.partido.id);
+    const maxV   = serie.reduce((m,v) => Math.max(m,v), 0) || 1;
+    const selPid = state.filters.fullPartidoMiss;
+
+    const bgColors = serie.map((v, i) => {
+      const t = v / maxV;
+      const base = 0.35 + t * 0.65;
+      const alpha = selPid == null ? base : (pids[i] === selPid ? 1 : 0.2);
+      return `rgba(239, 68, 68, ${alpha.toFixed(3)})`;
+    });
+
+    const totalsPlugin = {
+      id: "totalsFullNou",
+      afterDatasetsDraw(chart) {
+        const { ctx: c, scales: { x, y } } = chart;
+        c.save();
+        c.font = "600 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+        c.textBaseline = "middle"; c.textAlign = "left";
+        for (let i = 0; i < serie.length; i++) {
+          if (!serie[i]) continue;
+          const px = x.getPixelForValue(serie[i]) + 6;
+          const py = y.getPixelForValue(i);
+          c.fillStyle = "#e7ebf3";
+          c.fillText(serie[i].toLocaleString("es-MX"), px, py);
+          const w = c.measureText(serie[i].toLocaleString("es-MX")).width;
+          c.fillStyle = "#8a92a5";
+          c.fillText(` (${(pcts[i]*100).toFixed(1)}%)`, px + w, py);
+        }
+        c.restore();
+      }
+    };
+
+    if (state.chartFull) state.chartFull.destroy();
+    state.chartFull = new Chart(ctx1, {
+      type: "bar",
+      data: { labels, datasets: [{ label: "Abonos no usados (FULL)", data: serie, backgroundColor: bgColors, borderRadius: 4 }] },
+      plugins: [totalsPlugin],
+      options: {
+        indexAxis: "y",
+        responsive: true, maintainAspectRatio: false,
+        layout: { padding: { right: 90 } },
+        onClick: (evt, elements) => {
+          if (!elements || !elements.length) return;
+          const pid = pids[elements[0].index];
+          state.filters.fullPartidoMiss = (state.filters.fullPartidoMiss === pid) ? null : pid;
+          renderFull();
+        },
+        onHover: (evt, elements) => { evt.native.target.style.cursor = elements.length ? "pointer" : "default"; },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (c) => {
+                const s = stats[c.dataIndex];
+                const pctStr = s.elegibles > 0 ? ` (${(s.ausencias/s.elegibles*100).toFixed(1)}% de elegibles)` : "";
+                return `${s.ausencias.toLocaleString("es-MX")} no usados${pctStr}`;
+              },
+              afterLabel: (c) => {
+                const s = stats[c.dataIndex];
+                return `Elegibles: ${s.elegibles.toLocaleString("es-MX")} · Asistieron: ${s.asistencias.toLocaleString("es-MX")}\nClick para ver la lista de faltantes`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: { ticks: { color: "#9098a9", precision: 0 }, grid: { color: "rgba(255,255,255,.06)" }, beginAtZero: true },
+          y: { ticks: { color: "#e7ebf3", font: { weight: "600" } }, grid: { color: "rgba(255,255,255,.04)" } }
+        }
+      }
+    });
+
+    const btn = document.getElementById("f-full-partido-clear");
+    if (btn) {
+      btn.style.display = selPid == null ? "none" : "inline-block";
+      btn.onclick = () => { state.filters.fullPartidoMiss = null; renderFull(); };
+    }
+  }
+
+  // 3) Histograma de fidelidad (FULL)
+  const ctx2 = document.getElementById("chart-full-fid");
+  if (ctx2) {
+    const partidos = partidosFiltrados();
+    const nPart = partidos.length;
+    const abonados = state.data.abonados;
+    const buckets = new Array(nPart + 1).fill(0);
+    for (let i = 0; i < abonados.length; i++) {
+      const a = abonados[i];
+      if (!a.esFull) continue;
+      let asistidos = 0;
+      for (const p of partidos) {
+        if (!isEligible(a, p.fecha)) continue;
+        const s = state.accesosSets.get(p.id);
+        if (s && s.has(i)) asistidos++;
+      }
+      buckets[asistidos]++;
+    }
+    const labels = buckets.map((_, i) => String(i));
+    const selBucket = state.filters.fullBucket;
+    const bgBuckets = buckets.map((_, i) =>
+      selBucket == null ? "#ef4444" : (i === selBucket ? "#ef4444" : "#ef444455"));
+    const totalAll = buckets.reduce((s,v) => s+v, 0) || 1;
+
+    const totalsPlugin = {
+      id: "totalsFull",
+      afterDatasetsDraw(chart) {
+        const { ctx, scales: { x, y } } = chart;
+        ctx.save();
+        ctx.font = "600 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+        ctx.fillStyle = "#e7ebf3";
+        ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+        for (let i = 0; i < buckets.length; i++) {
+          if (!buckets[i]) continue;
+          ctx.fillText(buckets[i].toLocaleString("es-MX"), x.getPixelForValue(i), y.getPixelForValue(buckets[i]) - 4);
+        }
+        ctx.restore();
+      }
+    };
+    if (state.chartFullFid) state.chartFullFid.destroy();
+    state.chartFullFid = new Chart(ctx2, {
+      type: "bar",
+      data: { labels, datasets: [{ label: "Abonados FULL", data: buckets, backgroundColor: bgBuckets, borderRadius: 4 }] },
+      plugins: [totalsPlugin],
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        layout: { padding: { top: 18 } },
+        onClick: (evt, elements) => {
+          if (!elements || !elements.length) return;
+          const idx = elements[0].index;
+          state.filters.fullBucket = (state.filters.fullBucket === idx) ? null : idx;
+          renderFull();
+        },
+        onHover: (evt, elements) => { evt.native.target.style.cursor = elements.length ? "pointer" : "default"; },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              title: (items) => `${items[0].label} partidos asistidos`,
+              label: (c) => `${c.parsed.y.toLocaleString("es-MX")} abonados (${(c.parsed.y/totalAll*100).toFixed(1)}%)`,
+              afterLabel: () => "Click para filtrar la tabla"
+            }
+          }
+        },
+        scales: {
+          x: { title: { display: true, text: "Partidos asistidos", color: "#8a92a5" }, ticks: { color: "#8a92a5" }, grid: { color: "rgba(255,255,255,.04)" } },
+          y: { ticks: { color: "#8a92a5", precision: 0 }, grid: { color: "rgba(255,255,255,.06)" }, beginAtZero: true }
+        }
+      }
+    });
+
+    const btn = document.getElementById("f-full-bucket-clear");
+    if (btn) {
+      btn.style.display = selBucket == null ? "none" : "inline-block";
+      btn.onclick = () => { state.filters.fullBucket = null; renderFull(); };
+    }
+  }
+
+  // 4) Tabla de abonados FULL (aplica filtros de histograma y de partido faltado)
+  let rows = computeRanking({
+    scope: "full",
+    search: state.filters.fullSearch,
+    contact: "todos",
+    bucketFilt: state.filters.fullBucket,
+  });
+  const missPid = state.filters.fullPartidoMiss;
+  if (missPid) {
+    const p = state.data.partidos.find(x => x.id === missPid);
+    if (p) {
+      const accSet = state.accesosSets.get(p.id) || new Set();
+      rows = rows.filter(r => {
+        const a = state.data.abonados[r._idx];
+        if (!isEligible(a, p.fecha)) return false;
+        return !accSet.has(r._idx);  // no asistió
+      });
+    }
+  }
+  const sorted = sortRows(rows, state.sortFull);
+  const limit  = state.filters.fullLimit || sorted.length;
+  const view   = limit > 0 ? sorted.slice(0, limit) : sorted;
+
+  // Banner indicador del filtro activo
+  const banner = document.getElementById("full-filter-banner");
+  if (banner) {
+    const parts = [];
+    if (missPid) {
+      const p = state.data.partidos.find(x => x.id === missPid);
+      if (p) parts.push(`Faltantes al partido vs <b>${p.rival}</b>`);
+    }
+    if (state.filters.fullBucket != null) {
+      parts.push(`Asistieron a <b>${state.filters.fullBucket}</b> partidos`);
+    }
+    if (parts.length) {
+      banner.style.display = "flex";
+      banner.innerHTML = `<span>Mostrando: ${parts.join(" · ")} · <b>${rows.length.toLocaleString("es-MX")}</b> abonados</span>
+        <button class="reset" onclick="state.filters.fullPartidoMiss=null; state.filters.fullBucket=null; renderFull();">Limpiar filtros</button>`;
+    } else {
+      banner.style.display = "none";
+    }
+  }
+
+  const tbody = $("#tabla-full tbody");
+  tbody.innerHTML = "";
+  $("#full-empty").style.display = view.length ? "none" : "block";
+  applySortIndicators("tabla-full", state.sortFull);
+
+  const frag = document.createDocumentFragment();
+  for (const r of view) {
+    const contacto = [r.correo, r.telefono].filter(Boolean).join(" · ");
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHTML(r.nombre) || "<span class='muted'>—</span>"}</td>
+      <td class="muted">${escapeHTML(r.orden)}</td>
+      <td class="muted">${escapeHTML(r.barcode) || "—"}</td>
+      <td class="muted">${escapeHTML(r.asiento) || "—"}</td>
+      <td class="muted">${escapeHTML(r.zona) || "—"}</td>
+      <td class="muted">${escapeHTML(contacto) || "—"}</td>
+      <td class="num">${r.elegibles}</td>
+      <td class="num">${r.asistidos}</td>
+      <td class="num">${fmtPct(r.pct)}<span class="pct-bar"><span style="width:${Math.round((r.pct||0)*100)}%"></span></span></td>
+    `;
+    frag.appendChild(tr);
+  }
+  tbody.appendChild(frag);
+}
+
+function wireFullFilters() {
+  $("#f-full-limit")?.addEventListener("change", e => { state.filters.fullLimit = parseInt(e.target.value,10)||0; renderFull(); });
+  $("#f-full-search")?.addEventListener("input",  e => { state.filters.fullSearch = e.target.value.trim().toLowerCase(); renderFull(); });
+  document.querySelectorAll("#tabla-full th.sortable").forEach(th => {
+    th.addEventListener("click", () => toggleSort(state.sortFull, th.dataset.key, renderFull));
   });
 }
 
