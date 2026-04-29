@@ -277,12 +277,15 @@
     border-color: rgba(239, 68, 68, .35);
     padding: 22px 24px;
   }
+  .kpi.hero {
+    border-color: rgba(52, 211, 153, .35);
+  }
   .kpi.hero .label { color: var(--text); font-weight: 600; letter-spacing: .03em; }
   .kpi.hero .value {
     font-size: 52px;
     font-weight: 700;
     line-height: 1.05;
-    background: linear-gradient(135deg, var(--accent), #fb7185);
+    background: linear-gradient(135deg, #34d399, #10b981);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -639,7 +642,7 @@
       <div class="kpi hero">
         <div class="label">
           Aprovechamiento de asientos
-          <span class="info-icon" title="Asistencias entre el total de asientos disponibles de abonados en el periodo.">i</span>
+          <span class="info-icon" title="Asientos efectivamente usados (asistencia directa del abonado + reventas vendidas en mercado secundario) entre el total de asientos disponibles. Una reventa vendida cuenta como uso porque alguien ocupó el asiento, aunque no fuera el abonado titular.">i</span>
         </div>
         <div class="value" id="kpi-uso-global">—</div>
         <div class="sub" id="kpi-uso-global-sub">—</div>
@@ -659,7 +662,7 @@
         <div style="display:flex; align-items:center; justify-content:space-between; width:100%; flex-wrap:wrap; gap:10px">
           <div style="display:flex; align-items:center; gap:6px">
             <h2 style="margin:0">Composición por partido</h2>
-            <span class="info-icon" title="Apilado: Asistentes (verde) · En reventa vendida (ámbar) · Asientos vacíos (rojo). El total sobre cada barra es el número de elegibles del partido.">i</span>
+            <span class="info-icon" title="Apilado por partido: Asistencia directa (verde) · Vendido en reventa (azul, asiento usado por terceros) · Asientos vacíos (rojo). El total encima de cada barra es el total visible (cambia si ocultas series en la leyenda).">i</span>
           </div>
           <div class="pill-tabs" id="chart-sort-tabs">
             <button data-sort="cron" class="active">Cronológico</button>
@@ -1259,6 +1262,30 @@ function partidosFiltrados() {
       return true;
     })
     .sort((a,b) => a.fecha.localeCompare(b.fecha));
+}
+
+// Cuenta reventas VENDIDAS por partido (mismo scope que el reporte: excluye Digital FULL).
+// Cruza r.rival con p.rival y filtra por r.a -> abonado en scope "main".
+// Retorna Map<partido_id, vendidos>.
+function reventasVendidasByPartido(scope) {
+  scope = scope || "main";
+  const partidos = state.data.partidos || [];
+  const ridToPid = new Map();
+  for (const p of partidos) ridToPid.set(p.rival, p.id);
+
+  const out = new Map();
+  for (const p of partidos) out.set(p.id, 0);
+
+  const abonados = state.data.abonados;
+  for (const r of (state.data.reventas || [])) {
+    if (r.estatus !== "vendido") continue;
+    const a = abonados[r.a];
+    if (!a || !inScope(a, scope)) continue;
+    const pid = ridToPid.get(r.rival);
+    if (!pid) continue;
+    out.set(pid, (out.get(pid) || 0) + 1);
+  }
+  return out;
 }
 
 // Calcula estadísticas por partido
@@ -1879,21 +1906,25 @@ function renderMS() {
 }
 
 function renderKPIs(stats) {
-  const abonados = state.data.abonados.filter(a => !a.esFull);
+  const abonados   = state.data.abonados.filter(a => !a.esFull);
+  const reventaPid = reventasVendidasByPartido("main");
 
-  let totalAsist = 0, totalEleg = 0;
+  let totalAsist = 0, totalEleg = 0, totalReventa = 0;
   for (const s of stats) {
-    totalAsist += s.asistencias;
-    totalEleg  += s.elegibles;
+    totalAsist   += s.asistencias;
+    totalEleg    += s.elegibles;
+    totalReventa += reventaPid.get(s.partido.id) || 0;
   }
 
-  // Aprovechamiento = asistencias / elegibles
-  const aprovechamiento = totalEleg > 0 ? totalAsist / totalEleg : 0;
+  // Aprovechamiento = (asistencias directas + reventas vendidas) / elegibles
+  // Una reventa vendida significa que alguien usó el asiento, aunque no fuera el abonado.
+  const ocupados        = totalAsist + totalReventa;
+  const aprovechamiento = totalEleg > 0 ? ocupados / totalEleg : 0;
 
   // Hero — Aprovechamiento de asientos
   $("#kpi-uso-global").textContent     = `${(aprovechamiento * 100).toFixed(1)}%`;
   $("#kpi-uso-global-sub").textContent =
-    `${totalAsist.toLocaleString("es-MX")} asistencias de ${totalEleg.toLocaleString("es-MX")} disponibles`;
+    `${totalAsist.toLocaleString("es-MX")} directas + ${totalReventa.toLocaleString("es-MX")} reventa de ${totalEleg.toLocaleString("es-MX")} disponibles`;
 
   // Abonados activos
   $("#kpi-anuales").textContent      = abonados.length.toLocaleString("es-MX");
@@ -1986,21 +2017,24 @@ function escapeHTML(s) {
 function renderChart(precomputed) {
   const rawStats = precomputed || computePartidoStats();
   const sortMode = state.filters.chartSort || "cron";
+  const reventaPid = reventasVendidasByPartido("main");
 
-  // Enriquecer: asistentes y vacíos (reventa pendiente de cruzar bien por orden/abonado)
+  // Enriquecer: asistentes directos, vendido en reventa, vacíos
   const enriched = rawStats.map(s => {
     const asistentes = s.asistencias;
-    const vacios     = Math.max(0, s.elegibles - asistentes);
-    return { ...s, asistentes, vacios, total: s.elegibles };
+    const reventa    = reventaPid.get(s.partido.id) || 0;
+    const vacios     = Math.max(0, s.elegibles - asistentes - reventa);
+    return { ...s, asistentes, reventa, vacios, total: s.elegibles };
   });
 
   let stats = enriched.slice();
   if (sortMode === "desc")      stats.sort((a,b) => (b.pctUso||0) - (a.pctUso||0));
   else if (sortMode === "asc")  stats.sort((a,b) => (a.pctUso||0) - (b.pctUso||0));
 
-  const labels     = stats.map(s => s.partido.rival || "—");
-  const dataAsist  = stats.map(s => s.asistentes);
-  const dataVacios = stats.map(s => s.vacios);
+  const labels      = stats.map(s => s.partido.rival || "—");
+  const dataAsist   = stats.map(s => s.asistentes);
+  const dataReventa = stats.map(s => s.reventa);
+  const dataVacios  = stats.map(s => s.vacios);
 
   const ctx = document.getElementById("chart-nousados");
   if (!ctx) return;
@@ -2038,8 +2072,9 @@ function renderChart(precomputed) {
     data: {
       labels,
       datasets: [
-        { label: "Asistentes",      data: dataAsist,  backgroundColor: "rgba(52, 211, 153, .9)", stack: "s", borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 6, bottomRight: 6 } },
-        { label: "Asientos vacíos", data: dataVacios, backgroundColor: "rgba(239, 68, 68, .85)", stack: "s", borderRadius: { topLeft: 6, topRight: 6, bottomLeft: 0, bottomRight: 0 } },
+        { label: "Asistencia directa",   data: dataAsist,   backgroundColor: "rgba(52, 211, 153, .9)", stack: "s", borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 6, bottomRight: 6 } },
+        { label: "Vendido en reventa",   data: dataReventa, backgroundColor: "rgba(96, 165, 250, .9)", stack: "s", borderRadius: 0 },
+        { label: "Asientos vacíos",      data: dataVacios,  backgroundColor: "rgba(239, 68, 68, .85)", stack: "s", borderRadius: { topLeft: 6, topRight: 6, bottomLeft: 0, bottomRight: 0 } },
       ]
     },
     plugins: [totalsOnTop],
