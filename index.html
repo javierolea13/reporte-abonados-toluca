@@ -335,6 +335,56 @@
   .filters { border-radius: 14px; }
   details.collapsible { border-radius: 14px; }
 
+  /* Heatmap: tabla con celdas coloreadas por intensidad (mercado secundario) */
+  .heatmap-card { padding: 18px 20px; }
+  .heatmap-table {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 1fr 1fr 1fr;
+    gap: 4px;
+    margin-top: 12px;
+  }
+  .heatmap-cell {
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    transition: transform .15s;
+  }
+  .heatmap-cell.header {
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-weight: 700;
+    padding: 6px 12px;
+  }
+  .heatmap-cell.header.partido { text-align: left; }
+  .heatmap-cell.partido {
+    text-align: left;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+  }
+  .heatmap-cell.value {
+    color: #ffffff;
+    font-weight: 700;
+    border: 1px solid rgba(255,255,255,.06);
+  }
+  .heatmap-cell.value.empty { background: var(--surface-2); color: var(--text-muted); font-weight: 500; }
+  .heatmap-cell:hover { transform: scale(1.02); cursor: default; }
+  .heatmap-legend {
+    display: flex; align-items: center; gap: 14px;
+    font-size: 11px; color: var(--text-muted);
+    margin-top: 10px;
+  }
+  .heatmap-legend .gradient {
+    height: 8px; width: 80px; border-radius: 4px;
+    background: linear-gradient(90deg, rgba(239, 68, 68, .15), rgba(239, 68, 68, .95));
+  }
+
   /* Topbar: filtro global */
   .global-filter {
     display: flex; align-items: flex-end; gap: 14px;
@@ -769,6 +819,27 @@
       </div>
       <div class="chart-box" style="height:480px"><canvas id="chart-ms-ingresos"></canvas></div>
     </div>
+
+    <div class="card heatmap-card" style="margin-top:20px">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; gap:12px; flex-wrap:wrap">
+        <div style="display:flex; align-items:center; gap:6px">
+          <h2 style="margin:0">Mapa de calor · listings y rechazos por partido</h2>
+          <span class="info-icon" title="Cada celda se colorea por intensidad relativa al máximo de su columna. Color rojo intenso = más volumen. Útil para identificar partidos con más oferta de reventa y los que más rechazos (expirados) tuvieron.">i</span>
+        </div>
+        <div class="pill-tabs" id="heatmap-sort-tabs">
+          <button data-sort="cron" class="active">Cronológico</button>
+          <button data-sort="listings">Más listings</button>
+          <button data-sort="rechazo">Más % rechazo</button>
+        </div>
+      </div>
+      <div class="heatmap-table" id="heatmap-table"></div>
+      <div class="heatmap-legend">
+        <span>Menos</span>
+        <div class="gradient"></div>
+        <span>Más</span>
+        <span style="margin-left:auto">Verde = vendidos · Rojo = listings/expirados/rechazo</span>
+      </div>
+    </div>
   </section>
 
   <!-- PÁGINA: MS POR ZONA -->
@@ -816,21 +887,15 @@
     <div class="kpi-grid" style="margin-bottom:20px">
       <div class="kpi"><div class="label">Abonados FULL</div><div class="value" id="kpi-full-abonados">—</div></div>
       <div class="kpi"><div class="label">Partidos</div><div class="value" id="kpi-full-partidos">—</div></div>
-      <div class="kpi"><div class="label">Asistencia prom. / partido</div><div class="value" id="kpi-full-asist">—</div></div>
-      <div class="kpi"><div class="label">Abonos no usados prom. / partido</div><div class="value" id="kpi-full-nousados">—</div></div>
     </div>
 
     <div class="card chart-card" style="margin-bottom:20px">
-      <div class="chart-header" style="flex-direction:column; align-items:flex-start; gap:10px">
-        <div style="display:flex; align-items:center; justify-content:space-between; width:100%; flex-wrap:wrap; gap:10px">
-          <div>
-            <h2 style="margin:0">Abonos no usados por partido (FULL)</h2>
-            <div style="font-size:12px; color: var(--text-muted); margin-top:4px">
-              <span style="color: var(--accent)">Click en una barra</span> para ver los abonados FULL que faltaron a ese partido.
-            </div>
-          </div>
-          <button class="reset" id="f-full-partido-clear" style="display:none">Limpiar selección</button>
+      <div class="chart-header">
+        <div style="display:flex; align-items:center; gap:6px">
+          <h2 style="margin:0">Composición por partido (FULL)</h2>
+          <span class="info-icon" title="Apilado: Asistentes (verde) y Asientos vacíos (rojo). Total elegibles encima de cada barra. Click en una barra para filtrar la tabla a quienes faltaron a ese partido.">i</span>
         </div>
+        <button class="reset" id="f-full-partido-clear" style="display:none">Limpiar selección</button>
       </div>
       <div class="chart-box" style="height:440px"><canvas id="chart-full-nousados"></canvas></div>
     </div>
@@ -982,6 +1047,7 @@ const state = {
     fullBucket: null,         // N asistencias seleccionadas (histograma FULL)
     fullPartidoMiss: null,    // P### seleccionado (no usados por partido FULL)
     chartSort: "cron",  // "cron" | "desc" | "asc"  (gráfica abonos no usados)
+    heatmapSort: "cron",  // "cron" | "listings" | "rechazo" (heatmap MS por partido)
   },
   // Ámbito de cálculo: "main" = excluye Digital FULL (default), "full" = sólo FULL.
   scope: "main",
@@ -1129,6 +1195,16 @@ function wireFilters() {
       btn.classList.add("active");
       state.filters.chartSort = btn.dataset.sort;
       renderChart();
+    });
+  });
+
+  // Tabs de orden para el heatmap de mercado secundario
+  document.querySelectorAll("#heatmap-sort-tabs button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#heatmap-sort-tabs button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      state.filters.heatmapSort = btn.dataset.sort;
+      renderMSHeatmap();
     });
   });
 }
@@ -1659,11 +1735,87 @@ function renderMSIngresos() {
   });
 }
 
+// Heatmap por partido: listings totales, vendidos, expirados y % rechazo.
+// Cada celda se colorea por intensidad relativa al máximo de su columna.
+function renderMSHeatmap() {
+  const grid = document.getElementById("heatmap-table");
+  if (!grid) return;
+
+  const abonados = state.data.abonados;
+  const partidos = state.data.partidos || [];
+  const partidoByRival = new Map();
+  for (const p of partidos) partidoByRival.set(p.rival, p);
+
+  // Agregado por rival (mismo scope que el resto de MS: "main", excluye Digital FULL)
+  const agg = new Map();
+  for (const r of (state.data.reventas || [])) {
+    const a = abonados[r.a];
+    if (!a || !inScope(a, "main")) continue;
+    let o = agg.get(r.rival);
+    if (!o) { o = { rival: r.rival, listings: 0, vendidos: 0, expirados: 0, disponibles: 0 }; agg.set(r.rival, o); }
+    o.listings++;
+    if      (r.estatus === "vendido")    o.vendidos++;
+    else if (r.estatus === "expirado")   o.expirados++;
+    else if (r.estatus === "disponible") o.disponibles++;
+  }
+
+  // Solo rivales que tienen partido asociado y al menos 1 listing
+  const rows = Array.from(agg.values())
+    .filter(o => partidoByRival.has(o.rival) && o.listings > 0)
+    .map(o => ({
+      ...o,
+      fecha: partidoByRival.get(o.rival)?.fecha || "",
+      pctRechazo: o.listings > 0 ? o.expirados / o.listings : 0,
+    }));
+
+  // Orden
+  const sortMode = state.filters.heatmapSort || "cron";
+  if (sortMode === "listings")     rows.sort((a,b) => b.listings - a.listings);
+  else if (sortMode === "rechazo") rows.sort((a,b) => b.pctRechazo - a.pctRechazo);
+  else rows.sort((a,b) => a.fecha.localeCompare(b.fecha));
+
+  // Máximos por columna (para intensidad)
+  const maxL = rows.reduce((m,r) => Math.max(m, r.listings), 0) || 1;
+  const maxV = rows.reduce((m,r) => Math.max(m, r.vendidos), 0) || 1;
+  const maxE = rows.reduce((m,r) => Math.max(m, r.expirados), 0) || 1;
+  const maxR = rows.reduce((m,r) => Math.max(m, r.pctRechazo), 0) || 1;
+
+  // Helpers de color: intensidad 0..1 -> rgba
+  const red   = t => `rgba(239, 68, 68, ${(0.15 + t * 0.80).toFixed(3)})`;
+  const green = t => `rgba(52, 211, 153, ${(0.15 + t * 0.80).toFixed(3)})`;
+
+  let html = ""
+    + `<div class="heatmap-cell header partido">Partido</div>`
+    + `<div class="heatmap-cell header">Listings</div>`
+    + `<div class="heatmap-cell header">Vendidos</div>`
+    + `<div class="heatmap-cell header">Expirados</div>`
+    + `<div class="heatmap-cell header">% Rechazo</div>`;
+
+  for (const r of rows) {
+    const tL = r.listings  / maxL;
+    const tV = r.vendidos  / maxV;
+    const tE = r.expirados / maxE;
+    const tR = r.pctRechazo / maxR;
+    const cellL = r.listings  > 0 ? `style="background:${red(tL)}"`   : 'class="empty"';
+    const cellV = r.vendidos  > 0 ? `style="background:${green(tV)}"` : 'class="empty"';
+    const cellE = r.expirados > 0 ? `style="background:${red(tE)}"`   : 'class="empty"';
+    const cellR = r.pctRechazo > 0 ? `style="background:${red(tR)}"`  : 'class="empty"';
+    html += ""
+      + `<div class="heatmap-cell partido" title="${r.fecha}">${escapeHTML(r.rival)}</div>`
+      + `<div class="heatmap-cell value" ${cellL}>${r.listings.toLocaleString("es-MX")}</div>`
+      + `<div class="heatmap-cell value" ${cellV}>${r.vendidos.toLocaleString("es-MX")}</div>`
+      + `<div class="heatmap-cell value" ${cellE}>${r.expirados.toLocaleString("es-MX")}</div>`
+      + `<div class="heatmap-cell value" ${cellR}>${(r.pctRechazo * 100).toFixed(0)}%</div>`;
+  }
+  grid.innerHTML = html;
+}
+
 function renderMS() {
   if (!$("#tabla-ms")) return;
   renderMSInvList();
   renderMSIngresos();
   renderMSZonas();
+  renderMSHeatmap();
   const { rows, totalListings, totalVend, totalExp } = computeMS();
 
   // Ingresos totales y precio promedio (filtrando por mismo scope + filtros MS)
@@ -1934,48 +2086,41 @@ function renderFull() {
   // 1) KPIs
   const fullCount = state.data.abonados.reduce((s,a) => s + (a.esFull ? 1 : 0), 0);
   const stats = computePartidoStats("full");
-  const totalAsist = stats.reduce((s,x) => s + x.asistencias, 0);
-  const totalAusen = stats.reduce((s,x) => s + x.ausencias,   0);
-  const n = stats.length || 1;
 
   $("#kpi-full-abonados").textContent = fullCount.toLocaleString("es-MX");
   $("#kpi-full-partidos").textContent = stats.length.toLocaleString("es-MX");
-  $("#kpi-full-asist").textContent    = Math.round(totalAsist / n).toLocaleString("es-MX");
-  $("#kpi-full-nousados").textContent = Math.round(totalAusen / n).toLocaleString("es-MX");
 
-  // 2) Gráfica de no usados por partido (horizontal, rojo, con etiquetas y %)
+  // 2) Gráfica apilada (FULL): Asistentes (verde) + Asientos vacíos (rojo) con total visible.
   const ctx1 = document.getElementById("chart-full-nousados");
   if (ctx1) {
-    const labels = stats.map(s => s.partido.rival || "—");
-    const serie  = stats.map(s => s.ausencias);
-    const pcts   = stats.map(s => s.elegibles > 0 ? s.ausencias / s.elegibles : 0);
-    const pids   = stats.map(s => s.partido.id);
-    const maxV   = serie.reduce((m,v) => Math.max(m,v), 0) || 1;
-    const selPid = state.filters.fullPartidoMiss;
+    const labels     = stats.map(s => s.partido.rival || "—");
+    const dataAsist  = stats.map(s => s.asistencias);
+    const dataVacios = stats.map(s => s.ausencias);
+    const pids       = stats.map(s => s.partido.id);
+    const totalsArr  = stats.map(s => s.elegibles);
+    const selPid     = state.filters.fullPartidoMiss;
 
-    const bgColors = serie.map((v, i) => {
-      const t = v / maxV;
-      const base = 0.35 + t * 0.65;
-      const alpha = selPid == null ? base : (pids[i] === selPid ? 1 : 0.2);
-      return `rgba(239, 68, 68, ${alpha.toFixed(3)})`;
-    });
+    // Resaltado al seleccionar un partido
+    const dimVacios = dataVacios.map((_, i) => selPid == null ? "rgba(239, 68, 68, .85)" : (pids[i] === selPid ? "rgba(239, 68, 68, 1)" : "rgba(239, 68, 68, .25)"));
+    const dimAsist  = dataAsist.map((_, i) => selPid == null ? "rgba(52, 211, 153, .9)" : (pids[i] === selPid ? "rgba(52, 211, 153, 1)" : "rgba(52, 211, 153, .25)"));
 
     const totalsPlugin = {
       id: "totalsFullNou",
       afterDatasetsDraw(chart) {
         const { ctx: c, scales: { x, y } } = chart;
         c.save();
-        c.font = "600 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-        c.textBaseline = "middle"; c.textAlign = "left";
-        for (let i = 0; i < serie.length; i++) {
-          if (!serie[i]) continue;
-          const px = x.getPixelForValue(serie[i]) + 6;
-          const py = y.getPixelForValue(i);
-          c.fillStyle = "#e7ebf3";
-          c.fillText(serie[i].toLocaleString("es-MX"), px, py);
-          const w = c.measureText(serie[i].toLocaleString("es-MX")).width;
-          c.fillStyle = "#8a92a5";
-          c.fillText(` (${(pcts[i]*100).toFixed(1)}%)`, px + w, py);
+        c.font = "700 12px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+        c.textBaseline = "bottom"; c.textAlign = "center";
+        c.fillStyle = "#e7ebf3";
+        for (let i = 0; i < stats.length; i++) {
+          let visibleTotal = 0;
+          for (let dsi = 0; dsi < chart.data.datasets.length; dsi++) {
+            if (chart.isDatasetVisible(dsi)) visibleTotal += chart.data.datasets[dsi].data[i] || 0;
+          }
+          if (!visibleTotal) continue;
+          const px = x.getPixelForValue(i);
+          const py = y.getPixelForValue(visibleTotal) - 4;
+          c.fillText(visibleTotal.toLocaleString("es-MX"), px, py);
         }
         c.restore();
       }
@@ -1984,12 +2129,17 @@ function renderFull() {
     if (state.chartFull) state.chartFull.destroy();
     state.chartFull = new Chart(ctx1, {
       type: "bar",
-      data: { labels, datasets: [{ label: "Abonos no usados (FULL)", data: serie, backgroundColor: bgColors, borderRadius: 4 }] },
+      data: {
+        labels,
+        datasets: [
+          { label: "Asistentes",      data: dataAsist,  backgroundColor: dimAsist,  stack: "f", borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 6, bottomRight: 6 } },
+          { label: "Asientos vacíos", data: dataVacios, backgroundColor: dimVacios, stack: "f", borderRadius: { topLeft: 6, topRight: 6, bottomLeft: 0, bottomRight: 0 } },
+        ]
+      },
       plugins: [totalsPlugin],
       options: {
-        indexAxis: "y",
         responsive: true, maintainAspectRatio: false,
-        layout: { padding: { right: 90 } },
+        layout: { padding: { top: 24 } },
         onClick: (evt, elements) => {
           if (!elements || !elements.length) return;
           const pid = pids[elements[0].index];
@@ -1998,24 +2148,21 @@ function renderFull() {
         },
         onHover: (evt, elements) => { evt.native.target.style.cursor = elements.length ? "pointer" : "default"; },
         plugins: {
-          legend: { display: false },
+          legend: { display: true, position: "top", align: "end", labels: { color: "#e7ebf3", boxWidth: 10, boxHeight: 10, padding: 14, font: { size: 12 } } },
           tooltip: {
             callbacks: {
               label: (c) => {
-                const s = stats[c.dataIndex];
-                const pctStr = s.elegibles > 0 ? ` (${(s.ausencias/s.elegibles*100).toFixed(1)}% de elegibles)` : "";
-                return `${s.ausencias.toLocaleString("es-MX")} no usados${pctStr}`;
+                const v = c.parsed.y;
+                const t = totalsArr[c.dataIndex] || 1;
+                return `${c.dataset.label}: ${v.toLocaleString("es-MX")} (${(v/t*100).toFixed(1)}%)`;
               },
-              afterLabel: (c) => {
-                const s = stats[c.dataIndex];
-                return `Elegibles: ${s.elegibles.toLocaleString("es-MX")} · Asistieron: ${s.asistencias.toLocaleString("es-MX")}\nClick para ver la lista de faltantes`;
-              }
+              footer: (items) => `Total elegibles: ${totalsArr[items[0].dataIndex].toLocaleString("es-MX")} · Click para ver faltantes`
             }
           }
         },
         scales: {
-          x: { ticks: { color: "#9098a9", precision: 0 }, grid: { display: false }, beginAtZero: true },
-          y: { ticks: { color: "#e7ebf3", font: { weight: "600" } }, grid: { display: false } }
+          x: { stacked: true, ticks: { color: "#e7ebf3", font: { weight: "600" }, autoSkip: false, maxRotation: 45, minRotation: 45 }, grid: { display: false } },
+          y: { stacked: true, ticks: { color: "#9098a9", precision: 0 }, grid: { display: false }, beginAtZero: true }
         }
       }
     });
