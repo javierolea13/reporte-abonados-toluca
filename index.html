@@ -338,6 +338,34 @@
   .filters { border-radius: 14px; }
   details.collapsible { border-radius: 14px; }
 
+  /* Lista de ausentes por zona: barra horizontal por zona con count */
+  .zonas-list { display: flex; flex-direction: column; }
+  .zonas-row {
+    display: grid;
+    grid-template-columns: 220px 1fr 80px;
+    align-items: center;
+    gap: 14px;
+    padding: 9px 0;
+  }
+  .zonas-row + .zonas-row { border-top: 1px solid var(--border); }
+  .zonas-row .zona-name { font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .zonas-row .zona-bar {
+    height: 10px; border-radius: 999px; background: rgba(255,255,255,.05);
+    position: relative; overflow: hidden;
+  }
+  .zonas-row .zona-bar > span {
+    position: absolute; inset: 0 auto 0 0; border-radius: 999px;
+    background: linear-gradient(90deg, rgba(239, 68, 68, .55), rgba(239, 68, 68, .95));
+  }
+  .zonas-row .zona-count {
+    text-align: right;
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+  }
+  .zonas-card .zonas-banner-text { font-weight: 600; color: var(--text); }
+
   /* Heatmap: tabla con celdas coloreadas por intensidad (mercado secundario) */
   .heatmap-card { padding: 18px 20px; }
   .heatmap-table {
@@ -672,6 +700,20 @@
         </div>
       </div>
       <div class="chart-box" style="height:440px"><canvas id="chart-nousados"></canvas></div>
+    </div>
+
+    <div class="card zonas-card" style="margin-top:20px; padding:18px 20px">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:6px">
+        <div style="display:flex; align-items:center; gap:6px">
+          <h2 style="margin:0">Ausentes por zona</h2>
+          <span class="info-icon" title="Abonados que no asistieron, agrupados por la zona del estadio que tenían asignada. Por default suma los 16 partidos. Click en una barra de la gráfica de arriba para filtrar a un partido específico (click otra vez para quitar el filtro).">i</span>
+        </div>
+        <div id="zonas-banner" style="display:none; align-items:center; gap:10px; font-size:12px; color: var(--text-muted)">
+          <span class="zonas-banner-text"></span>
+          <button class="reset" id="zonas-clear">Limpiar filtro</button>
+        </div>
+      </div>
+      <div id="zonas-list" class="zonas-list"></div>
     </div>
   </section>
 
@@ -1052,6 +1094,7 @@ const state = {
     fullPartidoMiss: null,    // P### seleccionado (no usados por partido FULL)
     chartSort: "cron",  // "cron" | "desc" | "asc"  (gráfica abonos no usados)
     heatmapSort: "cron",  // "cron" | "listings" | "rechazo" (heatmap MS por partido)
+    ausentesPartido: null,  // partido_id si se filtra el panel "Ausentes por zona"
   },
   // Ámbito de cálculo: "main" = excluye Digital FULL (default), "full" = sólo FULL.
   scope: "main",
@@ -1210,6 +1253,12 @@ function wireFilters() {
       state.filters.heatmapSort = btn.dataset.sort;
       renderMSHeatmap();
     });
+  });
+
+  // Botón "Limpiar filtro" del panel Ausentes por zona
+  $("#zonas-clear")?.addEventListener("click", () => {
+    state.filters.ausentesPartido = null;
+    renderAusentesPorZona();
   });
 }
 
@@ -1420,9 +1469,67 @@ function render() {
   renderKPIs(stats);
   renderTablaPartidos(stats);
   renderChart(stats);
+  renderAusentesPorZona();
   renderRanking();
   renderMS();
   renderFull();
+}
+
+// Ausentes (no asistieron físicamente) agrupados por zona del estadio.
+// Si state.filters.ausentesPartido tiene un partido_id, filtra a ese partido.
+// Default: agrega sobre todos los partidos del rango global.
+function renderAusentesPorZona() {
+  const list = $("#zonas-list");
+  if (!list) return;
+
+  const allAbonados = state.data.abonados;
+  const targetPid   = state.filters.ausentesPartido;
+  const partidos    = targetPid
+    ? (state.data.partidos || []).filter(p => p.id === targetPid)
+    : partidosFiltrados();
+
+  const byZona = new Map();
+  let total = 0;
+  for (const p of partidos) {
+    const accSet = state.accesosSets.get(p.id) || new Set();
+    for (let i = 0; i < allAbonados.length; i++) {
+      const a = allAbonados[i];
+      if (!inScope(a, "main")) continue;
+      if (!isEligible(a, p.fecha)) continue;
+      if (accSet.has(i)) continue;  // sí asistió, no es ausente
+      const zona = a.zona || "(sin zona)";
+      byZona.set(zona, (byZona.get(zona) || 0) + 1);
+      total++;
+    }
+  }
+
+  const rows = Array.from(byZona.entries())
+    .map(([zona, count]) => ({ zona, count }))
+    .sort((a, b) => b.count - a.count);
+  const max = rows.reduce((m, r) => Math.max(m, r.count), 0) || 1;
+
+  // Banner de filtro activo
+  const banner = document.getElementById("zonas-banner");
+  if (banner) {
+    if (targetPid) {
+      const p = (state.data.partidos || []).find(x => x.id === targetPid);
+      const txt = banner.querySelector(".zonas-banner-text");
+      if (txt) txt.textContent = `${p?.rival || "—"} · ${p?.fecha ? fmtDate(p.fecha) : ""} · ${total.toLocaleString("es-MX")} ausentes`;
+      banner.style.display = "flex";
+    } else {
+      const txt = banner.querySelector(".zonas-banner-text");
+      if (txt) txt.textContent = `Todos los partidos · ${total.toLocaleString("es-MX")} ausencias en total`;
+      banner.style.display = "flex";
+    }
+  }
+
+  list.innerHTML = rows.map(r => `
+    <div class="zonas-row">
+      <div class="zona-name" title="${escapeHTML(r.zona)}">${escapeHTML(r.zona)}</div>
+      <div class="zona-bar"><span style="width:${(r.count / max * 100).toFixed(1)}%"></span></div>
+      <div class="zona-count">${r.count.toLocaleString("es-MX")}</div>
+    </div>
+  `).join("");
 }
 
 // ---------- mercado secundario ----------------------------------------
@@ -2104,16 +2211,25 @@ function renderChart(precomputed) {
     data: {
       labels,
       datasets: [
-        { label: "Asistencia directa",   data: dataAsist,    backgroundColor: "rgba(52, 211, 153, .9)", stack: "s", borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 6, bottomRight: 6 } },
-        { label: "Vendido en reventa",   data: dataReventa,  backgroundColor: "rgba(96, 165, 250, .9)", stack: "s", borderRadius: 0 },
-        { label: "Listado no vendido",   data: dataExpirado, backgroundColor: "rgba(245, 158, 11, .9)", stack: "s", borderRadius: 0 },
-        { label: "Vacío sin listar",     data: dataVacios,   backgroundColor: "rgba(239, 68, 68, .85)", stack: "s", borderRadius: { topLeft: 6, topRight: 6, bottomLeft: 0, bottomRight: 0 } },
+        { label: "Asistencia directa",                data: dataAsist,    backgroundColor: "rgba(52, 211, 153, .9)", stack: "s", borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 6, bottomRight: 6 } },
+        { label: "Abonos vendidos en MS",             data: dataReventa,  backgroundColor: "rgba(96, 165, 250, .9)", stack: "s", borderRadius: 0 },
+        { label: "Abonos ofrecidos sin ventas en MS", data: dataExpirado, backgroundColor: "rgba(245, 158, 11, .9)", stack: "s", borderRadius: 0 },
+        { label: "Vacío sin listar",                  data: dataVacios,   backgroundColor: "rgba(239, 68, 68, .85)", stack: "s", borderRadius: { topLeft: 6, topRight: 6, bottomLeft: 0, bottomRight: 0 } },
       ]
     },
     plugins: [totalsOnTop],
     options: {
       responsive: true, maintainAspectRatio: false,
       layout: { padding: { top: 24 } },
+      onClick: (evt, elements) => {
+        if (!elements || !elements.length) return;
+        const idx = elements[0].index;
+        const pid = stats[idx].partido.id;
+        // Toggle: si el partido ya estaba seleccionado, limpia el filtro.
+        state.filters.ausentesPartido = (state.filters.ausentesPartido === pid) ? null : pid;
+        renderAusentesPorZona();
+      },
+      onHover: (evt, elements) => { evt.native.target.style.cursor = elements.length ? "pointer" : "default"; },
       plugins: {
         legend: {
           display: true,
