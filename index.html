@@ -756,7 +756,6 @@
             <th class="sortable" data-key="nombre">Nombre</th>
             <th class="sortable" data-key="orden">Orden</th>
             <th class="sortable" data-key="barcode">Código barras</th>
-            <th class="sortable" data-key="asiento">Asiento</th>
             <th class="sortable" data-key="zona">Zona</th>
             <th class="sortable" data-key="contacto">Contacto</th>
             <th class="num sortable" data-key="elegibles">Elegibles</th>
@@ -1455,11 +1454,14 @@ function renderHistogramaFidelidad() {
   const partidos = partidosFiltrados();
   const nPart    = partidos.length;
   const abonados = state.data.abonados;
+  const fc       = state.filters.rankContact;  // "todos" | "con" | "sin"
 
   // Cuenta de asistencias por abonado (solo sobre partidos elegibles + filtrados).
   // Bucket: N partidos asistidos -> conteo, separado por con/sin contacto.
-  const bucketsCon = new Array(nPart + 1).fill(0);
-  const bucketsSin = new Array(nPart + 1).fill(0);
+  // Si el pill-tab filtra a "con" o "sin", el bucket contrario queda en 0
+  // para que la gráfica muestre solo el subconjunto seleccionado.
+  let bucketsCon = new Array(nPart + 1).fill(0);
+  let bucketsSin = new Array(nPart + 1).fill(0);
 
   for (let i = 0; i < abonados.length; i++) {
     const a = abonados[i];
@@ -1474,6 +1476,10 @@ function renderHistogramaFidelidad() {
     if (hasC) bucketsCon[asistidos]++;
     else      bucketsSin[asistidos]++;
   }
+
+  // Aplica el filtro de contacto (mismo que controla la tabla).
+  if (fc === "con") bucketsSin = bucketsSin.map(() => 0);
+  if (fc === "sin") bucketsCon = bucketsCon.map(() => 0);
 
   const labels = bucketsCon.map((_, i) => String(i));
 
@@ -1958,7 +1964,6 @@ function renderRanking() {
       <td>${escapeHTML(r.nombre) || "<span class='muted'>—</span>"}</td>
       <td class="muted">${escapeHTML(r.orden)}</td>
       <td class="muted">${escapeHTML(r.barcode) || "—"}</td>
-      <td class="muted">${escapeHTML(r.asiento) || "—"}</td>
       <td class="muted">${escapeHTML(r.zona) || "—"}</td>
       <td class="muted">${escapeHTML(contacto) || "—"}</td>
       <td class="num">${r.elegibles}</td>
