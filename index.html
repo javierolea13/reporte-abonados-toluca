@@ -662,7 +662,7 @@
         <div style="display:flex; align-items:center; justify-content:space-between; width:100%; flex-wrap:wrap; gap:10px">
           <div style="display:flex; align-items:center; gap:6px">
             <h2 style="margin:0">Composición por partido</h2>
-            <span class="info-icon" title="Apilado por partido: Asistencia directa (verde) · Vendido en reventa (azul, asiento usado por terceros) · Asientos vacíos (rojo). El total encima de cada barra es el total visible (cambia si ocultas series en la leyenda).">i</span>
+            <span class="info-icon" title="Apilado por partido — verde: Asistencia directa · azul: Vendido en reventa (asiento ocupado por terceros) · ámbar: Listado en MS pero no vendido (intentaron sin éxito) · rojo: Vacío sin listar. El total encima de cada barra es el total visible (cambia si ocultas series en la leyenda).">i</span>
           </div>
           <div class="pill-tabs" id="chart-sort-tabs">
             <button data-sort="cron" class="active">Cronológico</button>
@@ -680,7 +680,7 @@
     <div class="page-header">
       <div>
         <h1>Detalle por partido</h1>
-        <div class="subtitle">Elegibles, asistencia y abonos no usados por juego</div>
+        <div class="subtitle">Asistencia directa, reventa vendida, listados no vendidos y vacíos por juego</div>
       </div>
     </div>
     <div class="card table-wrap">
@@ -690,8 +690,10 @@
             <th class="sortable" data-key="fecha">Fecha</th>
             <th class="sortable" data-key="rival">Rival</th>
             <th class="num sortable" data-key="elegibles">Elegibles</th>
-            <th class="num sortable" data-key="asistencias">Asistencias</th>
-            <th class="num sortable" data-key="ausencias">Ausencias</th>
+            <th class="num sortable" data-key="asistencias">Asist. directa</th>
+            <th class="num sortable" data-key="reventa" title="Abonados que no fueron pero vendieron su boleto en mercado secundario (asiento usado por terceros).">Reventa vendida</th>
+            <th class="num sortable" data-key="expirados" title="Abonados que listaron en mercado secundario pero no se vendió. El asiento quedó vacío y no se ocupó.">Listado no vendido</th>
+            <th class="num sortable" data-key="vacios" title="Abonados que ni asistieron ni listaron en mercado secundario.">Vacío sin listar</th>
             <th class="num sortable" data-key="pctUso">% uso</th>
           </tr>
         </thead>
@@ -1264,27 +1266,37 @@ function partidosFiltrados() {
     .sort((a,b) => a.fecha.localeCompare(b.fecha));
 }
 
-// Cuenta reventas VENDIDAS por partido (mismo scope que el reporte: excluye Digital FULL).
-// Cruza r.rival con p.rival y filtra por r.a -> abonado en scope "main".
-// Retorna Map<partido_id, vendidos>.
-function reventasVendidasByPartido(scope) {
+// Cuenta reventas por partido y estatus (mismo scope: excluye Digital FULL por default).
+// Cruza r.rival con p.rival y filtra por r.a -> abonado en scope.
+// Retorna Map<partido_id, { vendidos, expirados }>.
+function reventasByPartido(scope) {
   scope = scope || "main";
   const partidos = state.data.partidos || [];
   const ridToPid = new Map();
   for (const p of partidos) ridToPid.set(p.rival, p.id);
 
   const out = new Map();
-  for (const p of partidos) out.set(p.id, 0);
+  for (const p of partidos) out.set(p.id, { vendidos: 0, expirados: 0 });
 
   const abonados = state.data.abonados;
   for (const r of (state.data.reventas || [])) {
-    if (r.estatus !== "vendido") continue;
     const a = abonados[r.a];
     if (!a || !inScope(a, scope)) continue;
     const pid = ridToPid.get(r.rival);
     if (!pid) continue;
-    out.set(pid, (out.get(pid) || 0) + 1);
+    const o = out.get(pid);
+    if (!o) continue;
+    if      (r.estatus === "vendido")  o.vendidos++;
+    else if (r.estatus === "expirado") o.expirados++;
   }
+  return out;
+}
+
+// Conveniencia: solo vendidos por partido (mantiene compatibilidad con código previo).
+function reventasVendidasByPartido(scope) {
+  const m = reventasByPartido(scope);
+  const out = new Map();
+  for (const [pid, o] of m) out.set(pid, o.vendidos);
   return out;
 }
 
@@ -1937,15 +1949,25 @@ function renderTablaPartidos(stats) {
   $("#partidos-empty").style.display = stats.length ? "none" : "block";
   applySortIndicators("tabla-partidos", state.sortPartidos);
 
+  const reventaPid = reventasByPartido("main");
+
   // Prepara filas planas para ordenar (sin perder referencia al partido).
-  const flat = stats.map(s => ({
-    fecha: s.partido.fecha,
-    rival: s.partido.rival || "",
-    elegibles: s.elegibles,
-    asistencias: s.asistencias,
-    ausencias: s.ausencias,
-    pctUso: s.pctUso,
-  }));
+  // % uso = (asistencia directa + reventa vendida) / elegibles
+  const flat = stats.map(s => {
+    const r = reventaPid.get(s.partido.id) || { vendidos: 0, expirados: 0 };
+    const reventa   = r.vendidos;
+    const expirados = r.expirados;
+    const vacios    = Math.max(0, s.elegibles - s.asistencias - reventa - expirados);
+    const pctUso    = s.elegibles > 0 ? (s.asistencias + reventa) / s.elegibles : 0;
+    return {
+      fecha: s.partido.fecha,
+      rival: s.partido.rival || "",
+      elegibles: s.elegibles,
+      asistencias: s.asistencias,
+      reventa, expirados, vacios,
+      pctUso,
+    };
+  });
   const sorted = sortRows(flat, state.sortPartidos);
 
   for (const s of sorted) {
@@ -1955,7 +1977,9 @@ function renderTablaPartidos(stats) {
       <td>${s.rival || "—"}</td>
       <td class="num">${s.elegibles.toLocaleString("es-MX")}</td>
       <td class="num">${s.asistencias.toLocaleString("es-MX")}</td>
-      <td class="num">${s.ausencias.toLocaleString("es-MX")}</td>
+      <td class="num" style="color:${s.reventa > 0 ? '#60a5fa' : 'var(--text-muted)'}">${s.reventa.toLocaleString("es-MX")}</td>
+      <td class="num" style="color:${s.expirados > 0 ? '#f59e0b' : 'var(--text-muted)'}">${s.expirados.toLocaleString("es-MX")}</td>
+      <td class="num" style="color:${s.vacios > 0 ? '#ef4444' : 'var(--text-muted)'}">${s.vacios.toLocaleString("es-MX")}</td>
       <td class="num">
         ${fmtPct(s.pctUso)}
         <span class="pct-bar"><span style="width:${Math.round((s.pctUso||0)*100)}%"></span></span>
@@ -2017,24 +2041,27 @@ function escapeHTML(s) {
 function renderChart(precomputed) {
   const rawStats = precomputed || computePartidoStats();
   const sortMode = state.filters.chartSort || "cron";
-  const reventaPid = reventasVendidasByPartido("main");
+  const reventaPid = reventasByPartido("main");
 
-  // Enriquecer: asistentes directos, vendido en reventa, vacíos
+  // Enriquecer: asistentes directos, vendido en reventa, listado no vendido, vacíos
   const enriched = rawStats.map(s => {
+    const r = reventaPid.get(s.partido.id) || { vendidos: 0, expirados: 0 };
     const asistentes = s.asistencias;
-    const reventa    = reventaPid.get(s.partido.id) || 0;
-    const vacios     = Math.max(0, s.elegibles - asistentes - reventa);
-    return { ...s, asistentes, reventa, vacios, total: s.elegibles };
+    const reventa    = r.vendidos;
+    const expirados  = r.expirados;
+    const vacios     = Math.max(0, s.elegibles - asistentes - reventa - expirados);
+    return { ...s, asistentes, reventa, expirados, vacios, total: s.elegibles };
   });
 
   let stats = enriched.slice();
   if (sortMode === "desc")      stats.sort((a,b) => (b.pctUso||0) - (a.pctUso||0));
   else if (sortMode === "asc")  stats.sort((a,b) => (a.pctUso||0) - (b.pctUso||0));
 
-  const labels      = stats.map(s => s.partido.rival || "—");
-  const dataAsist   = stats.map(s => s.asistentes);
-  const dataReventa = stats.map(s => s.reventa);
-  const dataVacios  = stats.map(s => s.vacios);
+  const labels       = stats.map(s => s.partido.rival || "—");
+  const dataAsist    = stats.map(s => s.asistentes);
+  const dataReventa  = stats.map(s => s.reventa);
+  const dataExpirado = stats.map(s => s.expirados);
+  const dataVacios   = stats.map(s => s.vacios);
 
   const ctx = document.getElementById("chart-nousados");
   if (!ctx) return;
@@ -2072,9 +2099,10 @@ function renderChart(precomputed) {
     data: {
       labels,
       datasets: [
-        { label: "Asistencia directa",   data: dataAsist,   backgroundColor: "rgba(52, 211, 153, .9)", stack: "s", borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 6, bottomRight: 6 } },
-        { label: "Vendido en reventa",   data: dataReventa, backgroundColor: "rgba(96, 165, 250, .9)", stack: "s", borderRadius: 0 },
-        { label: "Asientos vacíos",      data: dataVacios,  backgroundColor: "rgba(239, 68, 68, .85)", stack: "s", borderRadius: { topLeft: 6, topRight: 6, bottomLeft: 0, bottomRight: 0 } },
+        { label: "Asistencia directa",   data: dataAsist,    backgroundColor: "rgba(52, 211, 153, .9)", stack: "s", borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 6, bottomRight: 6 } },
+        { label: "Vendido en reventa",   data: dataReventa,  backgroundColor: "rgba(96, 165, 250, .9)", stack: "s", borderRadius: 0 },
+        { label: "Listado no vendido",   data: dataExpirado, backgroundColor: "rgba(245, 158, 11, .9)", stack: "s", borderRadius: 0 },
+        { label: "Vacío sin listar",     data: dataVacios,   backgroundColor: "rgba(239, 68, 68, .85)", stack: "s", borderRadius: { topLeft: 6, topRight: 6, bottomLeft: 0, bottomRight: 0 } },
       ]
     },
     plugins: [totalsOnTop],
