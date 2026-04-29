@@ -264,6 +264,108 @@
     font-weight: 600;
     margin-top: 6px;
   }
+  .kpi .sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    line-height: 1.4;
+  }
+
+  /* Hero KPI: el número protagonista del Resumen */
+  .kpi.hero {
+    background: linear-gradient(135deg, var(--surface), var(--surface-2));
+    border-color: rgba(239, 68, 68, .35);
+    padding: 22px 24px;
+  }
+  .kpi.hero .label { color: var(--text); font-weight: 600; letter-spacing: .03em; }
+  .kpi.hero .value {
+    font-size: 52px;
+    font-weight: 700;
+    line-height: 1.05;
+    background: linear-gradient(135deg, var(--accent), #fb7185);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-top: 4px;
+  }
+  .kpi.hero .sub { font-size: 13px; margin-top: 10px; }
+
+  /* Layout específico del Resumen: hero ancho + 3 KPIs apoyo */
+  .kpi-resumen {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 900px) {
+    .kpi-resumen { grid-template-columns: 1fr 1fr; }
+    .kpi-resumen .kpi.hero { grid-column: 1 / -1; }
+  }
+  @media (max-width: 540px) {
+    .kpi-resumen { grid-template-columns: 1fr; }
+  }
+
+  /* Etiqueta verde / ámbar / roja para mostrar mejor y peor número juntos */
+  .kpi .split { display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; }
+  .kpi .split .good { color: #ffffff; font-weight: 700; font-size: 22px; font-variant-numeric: tabular-nums; }
+  .kpi .split .bad  { color: var(--accent); font-weight: 700; font-size: 22px; font-variant-numeric: tabular-nums; }
+  .kpi .split .arrow { color: var(--text-muted); font-size: 14px; }
+
+  /* Ícono "i" de info: dispara tooltip nativo del navegador con el atributo title */
+  .info-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 10px; font-weight: 700;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    cursor: help;
+    margin-left: 6px;
+    user-select: none;
+    line-height: 1;
+    vertical-align: middle;
+    transition: all .15s;
+  }
+  .info-icon:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  /* Bordes más redondeados estilo C-Suite */
+  .kpi { border-radius: 14px; }
+  .card { border-radius: 14px; }
+  .filters { border-radius: 14px; }
+  details.collapsible { border-radius: 14px; }
+
+  /* Topbar: filtro global */
+  .global-filter {
+    display: flex; align-items: flex-end; gap: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 16px;
+    margin-bottom: 18px;
+    box-shadow: var(--shadow);
+    flex-wrap: wrap;
+  }
+  .global-filter .global-filter-label {
+    font-size: 11px; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: .08em;
+    font-weight: 700;
+    padding-bottom: 6px;
+    margin-right: 4px;
+  }
+  .global-filter .field { gap: 4px; }
+  .global-filter .field label { font-size: 11px; color: var(--text-muted); }
+  .global-filter .field select, .global-filter .field input {
+    padding: 6px 10px; font-size: 13px;
+    border: 1px solid var(--border); border-radius: 8px;
+    background: var(--surface-2); color: var(--text);
+    color-scheme: dark;
+  }
+  .global-filter .info-icon { margin-left: auto; }
 
   /* ============================================================
      FILTROS
@@ -431,19 +533,19 @@
 
   <nav>
     <div class="nav-group">
-      <div class="nav-group-label">Asistencia</div>
+      <div class="nav-group-label">1 · Salud de Asistencia</div>
       <a class="nav-item active" data-page="resumen">
         <span class="ico">▦</span> Resumen
       </a>
       <a class="nav-item" data-page="partidos">
         <span class="ico">◉</span> Detalle por partido
       </a>
-      <a class="nav-item" data-page="ranking">
-        <span class="ico">▤</span> Ranking de abonados
+      <a class="nav-item" data-page="full">
+        <span class="ico">★</span> Digital FULL
       </a>
     </div>
     <div class="nav-group">
-      <div class="nav-group-label">Mercado secundario</div>
+      <div class="nav-group-label">2 · Eficiencia de Mercado Secundario</div>
       <a class="nav-item" data-page="ms-partidos">
         <span class="ico">▥</span> Por partido
       </a>
@@ -455,9 +557,9 @@
       </a>
     </div>
     <div class="nav-group">
-      <div class="nav-group-label">Eventos especiales</div>
-      <a class="nav-item" data-page="full">
-        <span class="ico">★</span> Digital FULL
+      <div class="nav-group-label">3 · Ranking de Lealtad</div>
+      <a class="nav-item" data-page="ranking">
+        <span class="ico">▤</span> Ranking de abonados
       </a>
     </div>
   </nav>
@@ -469,40 +571,70 @@
 
 <main class="content">
 
+  <!-- TOPBAR: FILTRO GLOBAL DE FECHAS (aplica a todas las secciones) -->
+  <div class="global-filter">
+    <div class="global-filter-label">Rango global</div>
+    <div class="field"><label for="f-desde">Desde</label><input type="date" id="f-desde" /></div>
+    <div class="field"><label for="f-hasta">Hasta</label><input type="date" id="f-hasta" /></div>
+    <button class="reset" id="f-reset">Limpiar</button>
+    <span class="info-icon" title="Filtra los datos por rango de fechas. Aplica simultáneamente a Salud de Asistencia, Eficiencia de Mercado Secundario y Ranking de Lealtad.">i</span>
+  </div>
+
   <!-- PÁGINA: RESUMEN -->
   <section class="page active" id="page-resumen">
     <div class="page-header">
       <div>
-        <h1>Resumen</h1>
-        <div class="subtitle">Asistencia global de la temporada</div>
-      </div>
-      <div class="filters" style="margin:0">
-        <div class="field"><label for="f-desde">Desde</label><input type="date" id="f-desde" /></div>
-        <div class="field"><label for="f-hasta">Hasta</label><input type="date" id="f-hasta" /></div>
-        <button class="reset" id="f-reset">Limpiar</button>
+        <h1>Salud de Asistencia</h1>
+        <div class="subtitle">Aprovechamiento de asientos, mercado secundario y revenue en riesgo</div>
       </div>
     </div>
 
-    <div class="kpi-grid">
-      <div class="kpi"><div class="label">Abonados</div><div class="value" id="kpi-anuales">—</div></div>
-      <div class="kpi"><div class="label">Partidos</div><div class="value" id="kpi-partidos">—</div></div>
-      <div class="kpi"><div class="label">Asistencia prom. / partido</div><div class="value" id="kpi-asist-prom">—</div></div>
-      <div class="kpi"><div class="label">Abonos no usados prom. / partido</div><div class="value" id="kpi-nousados-prom">—</div></div>
+    <div class="kpi-grid kpi-resumen">
+      <div class="kpi hero">
+        <div class="label">
+          Aprovechamiento de asientos
+          <span class="info-icon" title="Asientos efectivamente ocupados (asistencia del abonado + reventa vendida) entre el total de asientos disponibles de abonados.">i</span>
+        </div>
+        <div class="value" id="kpi-uso-global">—</div>
+        <div class="sub" id="kpi-uso-global-sub">—</div>
+      </div>
+      <div class="kpi">
+        <div class="label">
+          Abonados activos
+          <span class="info-icon" title="Total de abonados con vigencia en el periodo. Excluye Digital FULL.">i</span>
+        </div>
+        <div class="value" id="kpi-anuales">—</div>
+        <div class="sub" id="kpi-partidos-sub">—</div>
+      </div>
+      <div class="kpi">
+        <div class="label">
+          Revenue en riesgo
+          <span class="info-icon" title="Valor monetario estimado de los asientos vacíos que NO se pusieron a la venta en mercado secundario. Calculado como (asientos no listados ni asistidos) × precio promedio de reventa.">i</span>
+        </div>
+        <div class="value" id="kpi-revenue-riesgo">—</div>
+        <div class="sub" id="kpi-revenue-riesgo-sub">—</div>
+      </div>
+      <div class="kpi">
+        <div class="label">
+          Éxito de reventa
+          <span class="info-icon" title="Porcentaje de boletos vendidos en mercado secundario sobre el total de boletos listados.">i</span>
+        </div>
+        <div class="value" id="kpi-exito-reventa">—</div>
+        <div class="sub" id="kpi-exito-reventa-sub">—</div>
+      </div>
     </div>
 
     <div class="card chart-card" style="margin-top:20px">
       <div class="chart-header" style="flex-direction:column; align-items:flex-start; gap:10px">
         <div style="display:flex; align-items:center; justify-content:space-between; width:100%; flex-wrap:wrap; gap:10px">
-          <div>
-            <h2 style="margin:0">Abonos no usados por partido</h2>
-            <div style="font-size:12px; color: var(--text-muted); margin-top:4px; max-width:700px">
-              Cada abonado cuenta una vez por cada partido que faltó. Por eso la suma de las barras puede superar el total de abonos emitidos.
-            </div>
+          <div style="display:flex; align-items:center; gap:6px">
+            <h2 style="margin:0">Composición por partido</h2>
+            <span class="info-icon" title="Apilado: Asistentes (verde) · En reventa vendida (ámbar) · Asientos vacíos (rojo). El total sobre cada barra es el número de elegibles del partido.">i</span>
           </div>
           <div class="pill-tabs" id="chart-sort-tabs">
             <button data-sort="cron" class="active">Cronológico</button>
-            <button data-sort="desc">Más no usados</button>
-            <button data-sort="asc">Menos no usados</button>
+            <button data-sort="desc">Mayor uso</button>
+            <button data-sort="asc">Menor uso</button>
           </div>
         </div>
       </div>
@@ -542,7 +674,7 @@
   <section class="page" id="page-ranking">
     <div class="page-header">
       <div>
-        <h1>Ranking de abonados</h1>
+        <h1>Ranking de Lealtad</h1>
         <div class="subtitle">% de asistencia sobre partidos elegibles</div>
       </div>
     </div>
@@ -575,9 +707,9 @@
       <div class="field">
         <label for="f-rank-limit">Mostrar</label>
         <select id="f-rank-limit">
+          <option value="10" selected>Top 10</option>
           <option value="50">Top 50</option>
           <option value="100">Top 100</option>
-          <option value="250">Top 250</option>
           <option value="500">Top 500</option>
           <option value="0">Todos</option>
         </select>
@@ -614,7 +746,7 @@
   <section class="page" id="page-ms-partidos">
     <div class="page-header">
       <div>
-        <h1>Mercado secundario · Por partido</h1>
+        <h1>Eficiencia de Mercado Secundario · Por partido</h1>
         <div class="subtitle">Listings, vendidos y expirados por juego</div>
       </div>
       <div class="filters" style="margin:0">
@@ -663,7 +795,7 @@
   <section class="page" id="page-ms-zonas">
     <div class="page-header">
       <div>
-        <h1>Mercado secundario · Por zona</h1>
+        <h1>Eficiencia de Mercado Secundario · Por zona</h1>
         <div class="subtitle">Qué zonas se venden más y variabilidad de precios</div>
       </div>
       <div class="filters" style="margin:0">
@@ -779,7 +911,7 @@
   <section class="page" id="page-ms-revendedores">
     <div class="page-header">
       <div>
-        <h1>Mercado secundario · Revendedores</h1>
+        <h1>Eficiencia de Mercado Secundario · Revendedores</h1>
         <div class="subtitle">Abonados que han puesto a venta sus boletos</div>
       </div>
     </div>
@@ -791,9 +923,9 @@
       <div class="field">
         <label for="f-ms-limit">Mostrar</label>
         <select id="f-ms-limit">
+          <option value="10" selected>Top 10</option>
           <option value="50">Top 50</option>
           <option value="100">Top 100</option>
-          <option value="250">Top 250</option>
           <option value="0">Todos</option>
         </select>
       </div>
@@ -856,14 +988,14 @@ const state = {
   filters: {
     desde: null,
     hasta: null,
-    rankLimit: 50,
+    rankLimit: 10,
     rankSearch: "",
     rankContact: "todos",  // "todos" | "con" | "sin"
     rankBucket: null,      // null | N  -> filtra al bucket de N partidos asistidos
     msPartido: "",
     msPartidoZona: "",
     msEstatus: "",
-    msLimit: 50,
+    msLimit: 10,
     msSearch: "",
     fullLimit: 50,
     fullSearch: "",
@@ -925,13 +1057,15 @@ async function loadData() {
 
 // ---------- filtros ----------------------------------------------------
 function wireFilters() {
-  $("#f-desde").addEventListener("change", (e) => { state.filters.desde = e.target.value || null; render(); });
-  $("#f-hasta").addEventListener("change", (e) => { state.filters.hasta = e.target.value || null; render(); });
-  $("#f-reset").addEventListener("click", () => {
+  // Filtros de fecha: el filtro fue movido al topbar global, pero las refs se
+  // mantienen tolerantes a null por si el DOM cambia.
+  $("#f-desde")?.addEventListener("change", (e) => { state.filters.desde = e.target.value || null; render(); });
+  $("#f-hasta")?.addEventListener("change", (e) => { state.filters.hasta = e.target.value || null; render(); });
+  $("#f-reset")?.addEventListener("click", () => {
     state.filters.desde = null;
     state.filters.hasta = null;
-    $("#f-desde").value = "";
-    $("#f-hasta").value = "";
+    const d = $("#f-desde"); if (d) d.value = "";
+    const h = $("#f-hasta"); if (h) h.value = "";
     render();
   });
 
@@ -1070,6 +1204,49 @@ function partidosFiltrados() {
       return true;
     })
     .sort((a,b) => a.fecha.localeCompare(b.fecha));
+}
+
+// Construye un mapa partido_id -> stats de reventa { vendidos, expirados, disponibles, listados, ingresos }
+// Usado por los KPIs ejecutivos (Aprovechamiento, Revenue en Riesgo, Éxito de Reventa).
+function computeReventasByPartido() {
+  const partidos = state.data.partidos || [];
+  const reventas = state.data.reventas || [];
+
+  // Mapa fecha+rival -> partido_id
+  const idxByKey = new Map();
+  for (const p of partidos) {
+    idxByKey.set(`${p.fecha}|${(p.rival||"").toLowerCase()}`, p.id);
+  }
+
+  const out = new Map();
+  for (const p of partidos) {
+    out.set(p.id, { vendidos: 0, expirados: 0, disponibles: 0, listados: 0, ingresos: 0 });
+  }
+
+  for (const r of reventas) {
+    const key = `${r.fecha}|${(r.rival||"").toLowerCase()}`;
+    const pid = idxByKey.get(key);
+    if (!pid) continue;
+    const o = out.get(pid);
+    if (!o) continue;
+    o.listados++;
+    if (r.estatus === "vendido")    { o.vendidos++; if (typeof r.precio === "number") o.ingresos += r.precio; }
+    if (r.estatus === "expirado")     o.expirados++;
+    if (r.estatus === "disponible")   o.disponibles++;
+  }
+  return out;
+}
+
+// Precio promedio de reventa vendida (pesos por boleto). Usado para estimar Revenue en Riesgo.
+function precioPromedioReventa() {
+  const reventas = state.data.reventas || [];
+  let suma = 0, n = 0;
+  for (const r of reventas) {
+    if (r.estatus === "vendido" && typeof r.precio === "number") {
+      suma += r.precio; n++;
+    }
+  }
+  return n > 0 ? suma / n : 0;
 }
 
 // Calcula estadísticas por partido
@@ -1358,9 +1535,9 @@ function renderHistogramaFidelidad() {
       },
       scales: {
         x: { stacked: true, title: { display: true, text: "Partidos asistidos", color: "#8a92a5" },
-             ticks: { color: "#8a92a5" }, grid: { color: "rgba(255,255,255,.04)" } },
+             ticks: { color: "#8a92a5" }, grid: { display: false } },
         y: { stacked: true, ticks: { color: "#8a92a5", precision: 0 },
-             grid: { color: "rgba(255,255,255,.06)" }, beginAtZero: true }
+             grid: { display: false }, beginAtZero: true }
       }
     }
   });
@@ -1538,8 +1715,8 @@ function renderMSIngresos() {
         }
       },
       scales: {
-        x: { ticks: { color: "#9098a9", callback: v => "$" + (v/1000) + "k" }, grid: { color: "rgba(255,255,255,.06)" }, beginAtZero: true },
-        y: { ticks: { color: "#e7ebf3", font: { weight: "600" } }, grid: { color: "rgba(255,255,255,.04)" } }
+        x: { ticks: { color: "#9098a9", callback: v => "$" + (v/1000) + "k" }, grid: { display: false }, beginAtZero: true },
+        y: { ticks: { color: "#e7ebf3", font: { weight: "600" } }, grid: { display: false } }
       }
     }
   });
@@ -1607,20 +1784,57 @@ function renderMS() {
 }
 
 function renderKPIs(stats) {
-  const abonados = state.data.abonados.filter(a => !a.esFull);
-  const totalAsist = stats.reduce((s, x) => s + x.asistencias, 0);
-  const totalAusen = stats.reduce((s, x) => s + x.ausencias, 0);
-  const n = stats.length || 1;
-  const asistProm = Math.round(totalAsist / n);
-  const ausenProm = Math.round(totalAusen / n);
-  const base      = abonados.length || 1;
+  const abonados      = state.data.abonados.filter(a => !a.esFull);
+  const reventasByPid = computeReventasByPartido();
+  const precioProm    = precioPromedioReventa();
 
-  const pct = (v) => `<span style="font-size:13px; font-weight:500; color: var(--text-muted); margin-left:6px">${(v/base*100).toFixed(1)}%</span>`;
+  let totalAsist = 0, totalEleg = 0, totalVendidos = 0, totalListados = 0, totalNoListados = 0;
+  for (const s of stats) {
+    const r = reventasByPid.get(s.partido.id) || { vendidos: 0, listados: 0 };
+    totalAsist     += s.asistencias;
+    totalEleg      += s.elegibles;
+    totalVendidos  += r.vendidos;
+    totalListados  += r.listados;
+    // Asientos vacíos NO listados = elegibles - asistencias - listados (cualquier estatus)
+    const noListados = Math.max(0, s.elegibles - s.asistencias - r.listados);
+    totalNoListados += noListados;
+  }
 
-  $("#kpi-anuales").textContent  = abonados.length.toLocaleString("es-MX");
-  $("#kpi-partidos").textContent = stats.length.toLocaleString("es-MX");
-  $("#kpi-asist-prom").innerHTML    = `${asistProm.toLocaleString("es-MX")}${pct(asistProm)}`;
-  $("#kpi-nousados-prom").innerHTML = `${ausenProm.toLocaleString("es-MX")}${pct(ausenProm)}`;
+  // Aprovechamiento de asientos = (asistencias + reventas vendidas) / elegibles
+  const ocupados        = totalAsist + totalVendidos;
+  const aprovechamiento = totalEleg > 0 ? ocupados / totalEleg : 0;
+
+  // Revenue en Riesgo = asientos vacíos no listados × precio promedio
+  const revenueRiesgo = totalNoListados * precioProm;
+
+  // Éxito de Reventa = vendidos / listados
+  const exitoReventa = totalListados > 0 ? totalVendidos / totalListados : 0;
+
+  // Helpers de formato
+  const fmtMoney = (v) => v >= 1_000_000
+    ? `$${(v/1_000_000).toFixed(2)}M`
+    : v >= 1_000
+      ? `$${(v/1_000).toFixed(0)}K`
+      : `$${Math.round(v).toLocaleString("es-MX")}`;
+
+  // Hero — Aprovechamiento de asientos
+  $("#kpi-uso-global").textContent     = `${(aprovechamiento * 100).toFixed(1)}%`;
+  $("#kpi-uso-global-sub").textContent =
+    `${ocupados.toLocaleString("es-MX")} ocupados de ${totalEleg.toLocaleString("es-MX")} disponibles · ${totalAsist.toLocaleString("es-MX")} asistencias + ${totalVendidos.toLocaleString("es-MX")} reventas`;
+
+  // Abonados activos
+  $("#kpi-anuales").textContent      = abonados.length.toLocaleString("es-MX");
+  $("#kpi-partidos-sub").textContent = `${stats.length} partidos en el periodo`;
+
+  // Revenue en Riesgo
+  $("#kpi-revenue-riesgo").textContent     = fmtMoney(revenueRiesgo);
+  $("#kpi-revenue-riesgo-sub").textContent =
+    `${totalNoListados.toLocaleString("es-MX")} asientos vacíos no listados · precio prom. $${Math.round(precioProm).toLocaleString("es-MX")}`;
+
+  // Éxito de Reventa
+  $("#kpi-exito-reventa").textContent     = `${(exitoReventa * 100).toFixed(1)}%`;
+  $("#kpi-exito-reventa-sub").textContent =
+    `${totalVendidos.toLocaleString("es-MX")} vendidos de ${totalListados.toLocaleString("es-MX")} listados`;
 }
 
 function renderTablaPartidos(stats) {
@@ -1710,45 +1924,45 @@ function escapeHTML(s) {
 function renderChart(precomputed) {
   const rawStats = precomputed || computePartidoStats();
   const sortMode = state.filters.chartSort || "cron";
-  let stats = rawStats.slice();
-  if (sortMode === "desc")      stats.sort((a,b) => b.ausencias - a.ausencias);
-  else if (sortMode === "asc")  stats.sort((a,b) => a.ausencias - b.ausencias);
-  // "cron": conserva el orden cronológico de computePartidoStats
+  const reventasByPid = computeReventasByPartido();
 
-  const labels = stats.map(s => s.partido.rival || "—");
-  const serie  = stats.map(s => s.ausencias);
-  const pcts   = stats.map(s => s.elegibles > 0 ? s.ausencias / s.elegibles : 0);
-  const maxV   = serie.reduce((m,v) => Math.max(m,v), 0) || 1;
-
-  // Color por magnitud: más rojo intenso = más abonos no usados
-  const bgColors = serie.map(v => {
-    const t = v / maxV;                 // 0..1
-    const alpha = 0.35 + t * 0.65;      // 0.35..1
-    return `rgba(239, 68, 68, ${alpha.toFixed(3)})`;
+  // Enriquecer cada partido con conteos para el apilado
+  const enriched = rawStats.map(s => {
+    const r = reventasByPid.get(s.partido.id) || { vendidos: 0, listados: 0 };
+    const asistentes = s.asistencias;
+    const enReventa  = r.vendidos;
+    const vacios     = Math.max(0, s.elegibles - asistentes - enReventa);
+    return { ...s, asistentes, enReventa, vacios, total: s.elegibles };
   });
+
+  let stats = enriched.slice();
+  if (sortMode === "desc")      stats.sort((a,b) => (b.pctUso||0) - (a.pctUso||0));
+  else if (sortMode === "asc")  stats.sort((a,b) => (a.pctUso||0) - (b.pctUso||0));
+
+  const labels      = stats.map(s => s.partido.rival || "—");
+  const dataAsist   = stats.map(s => s.asistentes);
+  const dataReventa = stats.map(s => s.enReventa);
+  const dataVacios  = stats.map(s => s.vacios);
 
   const ctx = document.getElementById("chart-nousados");
   if (!ctx) return;
 
-  // Plugin: dibuja "N (P%)" al final de cada barra horizontal
-  const totalsOnBars = {
-    id: "totalsOnBarsResumen",
+  // Plugin: total en negritas justo encima de cada barra (apilada)
+  const totalsOnTop = {
+    id: "totalsOnTopResumen",
     afterDatasetsDraw(chart) {
       const { ctx: c, scales: { x, y } } = chart;
       c.save();
-      c.font = "600 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-      c.textBaseline = "middle";
-      c.textAlign = "left";
-      for (let i = 0; i < serie.length; i++) {
-        const v = serie[i];
-        if (!v) continue;
-        const px = x.getPixelForValue(v) + 6;
-        const py = y.getPixelForValue(i);
-        c.fillStyle = "#e7ebf3";
-        c.fillText(v.toLocaleString("es-MX"), px, py);
-        const w = c.measureText(v.toLocaleString("es-MX")).width;
-        c.fillStyle = "#8a92a5";
-        c.fillText(` (${(pcts[i]*100).toFixed(1)}%)`, px + w, py);
+      c.font = "700 12px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      c.textBaseline = "bottom";
+      c.textAlign = "center";
+      c.fillStyle = "#e7ebf3";
+      for (let i = 0; i < stats.length; i++) {
+        const total = stats[i].total;
+        if (!total) continue;
+        const px = x.getPixelForValue(i);
+        const py = y.getPixelForValue(total) - 4;
+        c.fillText(total.toLocaleString("es-MX"), px, py);
       }
       c.restore();
     }
@@ -1759,37 +1973,49 @@ function renderChart(precomputed) {
     type: "bar",
     data: {
       labels,
-      datasets: [{
-        label: "Abonos no usados",
-        data: serie,
-        backgroundColor: bgColors,
-        borderRadius: 4,
-      }]
+      datasets: [
+        { label: "Asistentes",     data: dataAsist,   backgroundColor: "rgba(52, 211, 153, .9)", stack: "s", borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 6, bottomRight: 6 } },
+        { label: "En reventa",     data: dataReventa, backgroundColor: "rgba(245, 158, 11, .9)", stack: "s", borderRadius: 0 },
+        { label: "Asientos vacíos",data: dataVacios,  backgroundColor: "rgba(239, 68, 68, .85)", stack: "s", borderRadius: { topLeft: 6, topRight: 6, bottomLeft: 0, bottomRight: 0 } },
+      ]
     },
-    plugins: [totalsOnBars],
+    plugins: [totalsOnTop],
     options: {
-      indexAxis: "y",
       responsive: true, maintainAspectRatio: false,
-      layout: { padding: { right: 90 } },
+      layout: { padding: { top: 24 } },
       plugins: {
-        legend: { display: false },
+        legend: {
+          display: true,
+          position: "top",
+          align: "end",
+          labels: { color: "#e7ebf3", boxWidth: 10, boxHeight: 10, padding: 14, font: { size: 12 } }
+        },
         tooltip: {
           callbacks: {
             label: (c) => {
-              const s = stats[c.dataIndex];
-              const pctStr = s.elegibles > 0 ? ` (${(s.ausencias/s.elegibles*100).toFixed(1)}% de elegibles)` : "";
-              return `${s.ausencias.toLocaleString("es-MX")} no usados${pctStr}`;
+              const v = c.parsed.y;
+              const pct = stats[c.dataIndex].total > 0 ? (v / stats[c.dataIndex].total * 100) : 0;
+              return `${c.dataset.label}: ${v.toLocaleString("es-MX")} (${pct.toFixed(1)}%)`;
             },
-            afterLabel: (c) => {
-              const s = stats[c.dataIndex];
-              return `Elegibles: ${s.elegibles.toLocaleString("es-MX")} · Asistieron: ${s.asistencias.toLocaleString("es-MX")}`;
+            footer: (items) => {
+              const s = stats[items[0].dataIndex];
+              return `Total elegibles: ${s.total.toLocaleString("es-MX")}`;
             }
           }
         }
       },
       scales: {
-        x: { ticks: { color: "#9098a9", precision: 0 }, grid: { color: "rgba(255,255,255,.06)" }, beginAtZero: true },
-        y: { ticks: { color: "#e7ebf3", font: { weight: "600" } }, grid: { color: "rgba(255,255,255,.04)" } }
+        x: {
+          stacked: true,
+          ticks: { color: "#e7ebf3", font: { weight: "600" }, autoSkip: false, maxRotation: 45, minRotation: 45 },
+          grid: { display: false }
+        },
+        y: {
+          stacked: true,
+          ticks: { color: "#9098a9", precision: 0 },
+          grid: { display: false },
+          beginAtZero: true
+        }
       }
     }
   });
@@ -1882,8 +2108,8 @@ function renderFull() {
           }
         },
         scales: {
-          x: { ticks: { color: "#9098a9", precision: 0 }, grid: { color: "rgba(255,255,255,.06)" }, beginAtZero: true },
-          y: { ticks: { color: "#e7ebf3", font: { weight: "600" } }, grid: { color: "rgba(255,255,255,.04)" } }
+          x: { ticks: { color: "#9098a9", precision: 0 }, grid: { display: false }, beginAtZero: true },
+          y: { ticks: { color: "#e7ebf3", font: { weight: "600" } }, grid: { display: false } }
         }
       }
     });
@@ -1960,8 +2186,8 @@ function renderFull() {
           }
         },
         scales: {
-          x: { title: { display: true, text: "Partidos asistidos", color: "#8a92a5" }, ticks: { color: "#8a92a5" }, grid: { color: "rgba(255,255,255,.04)" } },
-          y: { ticks: { color: "#8a92a5", precision: 0 }, grid: { color: "rgba(255,255,255,.06)" }, beginAtZero: true }
+          x: { title: { display: true, text: "Partidos asistidos", color: "#8a92a5" }, ticks: { color: "#8a92a5" }, grid: { display: false } },
+          y: { ticks: { color: "#8a92a5", precision: 0 }, grid: { display: false }, beginAtZero: true }
         }
       }
     });
