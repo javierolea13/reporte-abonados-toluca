@@ -636,7 +636,6 @@
           <span class="info-icon" title="Asientos efectivamente usados (asistencia directa del abonado + reventas vendidas en mercado secundario) entre el total de asientos disponibles. Una reventa vendida cuenta como uso porque alguien ocupó el asiento, aunque no fuera el abonado titular.">i</span>
         </div>
         <div class="value" id="kpi-uso-global">—</div>
-        <div class="sub" id="kpi-uso-global-sub">—</div>
       </div>
       <div class="kpi">
         <div class="label">
@@ -2024,10 +2023,8 @@ function renderKPIs(stats) {
   const ocupados        = totalAsist + totalReventa;
   const aprovechamiento = totalEleg > 0 ? ocupados / totalEleg : 0;
 
-  // Hero — Aprovechamiento de asientos
-  $("#kpi-uso-global").textContent     = `${(aprovechamiento * 100).toFixed(1)}%`;
-  $("#kpi-uso-global-sub").textContent =
-    `${totalAsist.toLocaleString("es-MX")} directas + ${totalReventa.toLocaleString("es-MX")} reventa de ${totalEleg.toLocaleString("es-MX")} disponibles`;
+  // Hero — Asistencia de abonados
+  $("#kpi-uso-global").textContent = `${(aprovechamiento * 100).toFixed(1)}%`;
 
   // Abonados activos
   $("#kpi-anuales").textContent      = abonados.length.toLocaleString("es-MX");
