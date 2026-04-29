@@ -96,6 +96,7 @@ def build_abonados():
     path = SOURCE_DIR / ORDERS_FILE
     seen = {}
     total_rows = 0
+    cortesias_count = 0
     for d in read_sheet(path):
         ev = d.get("EVENTO") or ""
         if not ORDEN_EVENTO_RE.search(str(ev)):
@@ -108,6 +109,9 @@ def build_abonados():
         fecha = parse_date(d.get("FECHA"))
         total_rows += 1
         es_full = bool(ORDEN_FULL_RE.search(str(ev)))
+        # TIPO == "CORTESIA" en Ordenes marca abonos regalados.
+        # No los excluimos para poder filtrarlos en el dashboard.
+        es_cortesia = (str(d.get("TIPO") or "").strip().upper() == "CORTESIA")
         prev = seen.get(key)
         if prev is None or (fecha and fecha < prev["vigencia_inicio"]):
             row = {
@@ -126,8 +130,11 @@ def build_abonados():
             }
             if es_full:
                 row["esFull"] = 1
+            if es_cortesia:
+                row["esCortesia"] = 1
+                cortesias_count += 1
             seen[key] = row
-    print(f"  Órdenes procesadas: {total_rows}  |  abonados únicos (orden+asiento): {len(seen)}")
+    print(f"  Órdenes procesadas: {total_rows}  |  abonados únicos (orden+asiento): {len(seen)}  |  cortesías: {cortesias_count}")
     return list(seen.values())
 
 
