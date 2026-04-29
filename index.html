@@ -416,34 +416,6 @@
     background: linear-gradient(90deg, rgba(239, 68, 68, .15), rgba(239, 68, 68, .95));
   }
 
-  /* Topbar: filtro global */
-  .global-filter {
-    display: flex; align-items: flex-end; gap: 14px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 12px 16px;
-    margin-bottom: 18px;
-    box-shadow: var(--shadow);
-    flex-wrap: wrap;
-  }
-  .global-filter .global-filter-label {
-    font-size: 11px; color: var(--text-muted);
-    text-transform: uppercase; letter-spacing: .08em;
-    font-weight: 700;
-    padding-bottom: 6px;
-    margin-right: 4px;
-  }
-  .global-filter .field { gap: 4px; }
-  .global-filter .field label { font-size: 11px; color: var(--text-muted); }
-  .global-filter .field select, .global-filter .field input {
-    padding: 6px 10px; font-size: 13px;
-    border: 1px solid var(--border); border-radius: 8px;
-    background: var(--surface-2); color: var(--text);
-    color-scheme: dark;
-  }
-  .global-filter .info-icon { margin-left: auto; }
-
   /* ============================================================
      FILTROS
      ============================================================ */
@@ -647,15 +619,6 @@
 </aside>
 
 <main class="content">
-
-  <!-- TOPBAR: FILTRO GLOBAL DE FECHAS (aplica a todas las secciones) -->
-  <div class="global-filter">
-    <div class="global-filter-label">Rango global</div>
-    <div class="field"><label for="f-desde">Desde</label><input type="date" id="f-desde" /></div>
-    <div class="field"><label for="f-hasta">Hasta</label><input type="date" id="f-hasta" /></div>
-    <button class="reset" id="f-reset">Limpiar</button>
-    <span class="info-icon" title="Filtra los datos por rango de fechas. Aplica simultáneamente a Asistencia, Eficiencia de Mercado Secundario y Ranking de Lealtad.">i</span>
-  </div>
 
   <!-- PÁGINA: RESUMEN -->
   <section class="page active" id="page-resumen">
